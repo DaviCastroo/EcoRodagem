@@ -1,0 +1,35 @@
+{% extends 'app_name/base.html' %}
+
+{% block title %}Dashboard - EcoRodagem{% endblock %}
+
+{% block navbar_actions %}
+<button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+    <i class="fas fa-plus mr-2"></i>Novo
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+    <p class="text-gray-600">Visão geral dos seus veículos e consumo</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div class="flex items-center">
+            <div class="p-3 bg-blue-100 rounded-lg">
+                <i class="fas fa-car text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Veículos</p>
+                <p class="text-2xl font-bold text-gray-900">{{ total_veiculos }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Adicione mais cards aqui -->
+</div>
+
+<!-- Resto do conteúdo do dashboard -->
+{% endblock %}

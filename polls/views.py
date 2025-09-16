@@ -1,6 +1,35 @@
 from django.shortcuts import render
 from . import models
 from .models import Veiculo, Abastecer
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+# Define a view para as estatisticas do dashboard
+def dashboard(request):
+    # Estatísticas para o dashboard
+    total_veiculos = Veiculo.objects.count()
+    ultimo_abastecimento = Abastecer.objects.order_by('-data_abastecimento').first()
+
+    context = {
+        'total_veiculos': total_veiculos,
+        'ultimo_abastecimento': ultimo_abastecimento,
+        # Adicione mais dados conforme necessário
+    }
+    return render(request, 'app_name/dashboard.html', context)
+
+def veiculos(request):
+    veiculos = Veiculo.objects.all()
+    context = {
+        'veiculos': veiculos,
+    }
+    return render(request, 'app_name/veiculos.html', context)
+
+def cadastrar_veiculo(request):
+    if request.method == 'POST':
+        messages.success(request, 'Veículo cadastrado com sucesso!')
+        return redirect('veiculos')
+    return render(request, 'app_name/cadastrar_veiculo.html')
+
 
 
 #FUNÇÃO PARA ADICIONAR VEÍCULOS JA COM TRATAMENTO DE ERRO/ EXCEÇÃO
@@ -70,3 +99,13 @@ def adicionar_abastecimento(lista_abastecimentos):
     print("\nAbastecimento registrado com sucesso!")
     print(novo_abastecimento)
     return novo_abastecimento
+
+
+#MOSTRA OS ABASTECIMENTOS
+def listar_abastecimentos(lista_abastecimentos):
+    if not lista_abastecimentos:
+        print("Nenhum abastecimento registrado.")
+    else:
+        print("\nAbastecimentos registrados:")
+        for a in lista_abastecimentos:
+            print(a)
