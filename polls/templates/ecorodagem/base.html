@@ -1,20 +1,182 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <!-- Tailwind CDN -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EcoRodagem - Controle de Abastecimentos{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Seu CSS customizado -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-    <!-- Conteúdo -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- JavaScript -->
+    <!-- CSS Customizado -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Tailwind Config -->
+    <script>
+    tailwind.config = {
+    theme: {
+    extend: {
+    colors: {
+    primary: {
+    50: '#f0fdf4',
+    100: '#dcfce7',
+    200: '#bbf7d0',
+    300: '#86efac',
+    400: '#4ade80',
+    500: '#22c55e',
+    600: '#16a34a',
+    700: '#15803d',
+    800: '#166534',
+    900: '#14532d'
+    },
+    fuel: {
+    yellow: '#fbbf24',
+    red: '#ef4444',
+    orange: '#f97316'
+    }
+    },
+    fontFamily: {
+    'sans': ['Inter', 'system-ui', 'sans-serif']
+    }
+    }
+    }
+    }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed left-0 top-0 h-full w-64 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30">
+    <!-- Logo -->
+    <div class="flex items-center justify-center p-6 border-b border-gray-200">
+    <div class="flex items-center space-x-3">
+    <!-- Logo SVG inspirada na bomba de combustível -->
+    <div class="relative">
+    <svg width="40" height="40" viewBox="0 0 40 40" class="text-primary-600">
+    <!-- Corpo da bomba -->
+    <rect x="8" y="15" width="16" height="20" rx="2" fill="currentColor" class="opacity-90"/>
+    <!-- Bico da bomba -->
+    <path d="M24 20 L32 16 Q34 15 34 17 L34 19 Q34 21 32 20 L24 24" fill="#ef4444"/>
+    <!-- Gota de combustível -->
+    <circle cx="35" cy="14" r="3" fill="#fbbf24" class="animate-pulse"/>
+    <!-- Detalhes -->
+    <rect x="10" y="18" width="12" height="2" rx="1" fill="white" class="opacity-80"/>
+    <rect x="10" y="22" width="8" height="1.5" rx="0.75" fill="white" class="opacity-60"/>
+    </svg>
+    </div>
+    <div>
+    <h1 class="text-xl font-bold text-gray-900">EcoRodagem</h1>
+    <p class="text-xs text-gray-500">Controle Inteligente</p>
+    </div>
+    </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-6">
+    <div class="px-4">
+    <a href="{% url 'polls:dashboard' %}" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group">
+    <i class="fas fa-chart-line w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Dashboard</span>
+    </a>
+
+    <a href="{% url 'polls:veiculos' %}" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group mt-2">
+    <i class="fas fa-car w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Veículos</span>
+    </a>
+
+    <a href="#" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group mt-2">
+    <i class="fas fa-gas-pump w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Abastecimentos</span>
+    </a>
+
+    <a href="#" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group mt-2">
+    <i class="fas fa-chart-bar w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Relatórios</span>
+    </a>
+
+    <a href="#" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group mt-2">
+    <i class="fas fa-map-marker-alt w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Postos</span>
+    </a>
+    </div>
+
+    <!-- Divider -->
+    <div class="border-t border-gray-200 mt-6 pt-6 px-4">
+    <a href="#" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group">
+    <i class="fas fa-cog w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Configurações</span>
+    </a>
+
+    <a href="#" class="sidebar-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors group mt-2">
+    <i class="fas fa-question-circle w-5 h-5 mr-3 group-hover:text-primary-600"></i>
+    <span class="font-medium">Ajuda</span>
+    </a>
+    </div>
+    </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+    <!-- Top Bar -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="flex items-center justify-between px-6 py-4">
+    <div class="flex items-center">
+    <!-- Mobile menu button -->
+    <button id="sidebar-toggle" class="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+    <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <!-- Page title -->
+    <div class="ml-4 lg:ml-0">
+    <h2 class="text-xl font-semibold text-gray-900">{% block page_title %}Dashboard{% endblock %}</h2>
+    <p class="text-sm text-gray-500">{% block page_subtitle %}Visão geral dos seus veículos{% endblock %}</p>
+    </div>
+    </div>
+
+    <!-- Top bar actions -->
+    <div class="flex items-center space-x-4">
+    {% block navbar_actions %}
+    <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center">
+    <i class="fas fa-plus mr-2"></i>
+    Novo Registro
+    </button>
+    {% endblock %}
+
+    <!-- User menu -->
+    <div class="relative">
+    <button class="flex items-center p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+    <i class="fas fa-user-circle text-2xl"></i>
+    </button>
+    </div>
+    </div>
+    </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="p-6">
+    {% block content %}
+    {% endblock %}
+    </main>
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden hidden"></div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Scripts -->
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'js/charts.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

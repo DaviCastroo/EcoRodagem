@@ -31,8 +31,7 @@ SECRET_KEY = 'django-insecure-b5d5yd$4enh133p86g^s44g(=9akhjcwq9=9zhjwqvwd$@b__i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -44,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'polls.apps.PollsConfig',
+    'ecorodagem'
 ]
 
 MIDDLEWARE = [
@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'css.urls'
+ROOT_URLCONF = 'ecorodagem.urls'
 
 TEMPLATES = [
     {
@@ -73,8 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'css.wsgi.application'
-
+WSGI_APPLICATION = 'ecorodagem.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

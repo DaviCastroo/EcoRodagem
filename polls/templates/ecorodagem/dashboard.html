@@ -1,35 +1,249 @@
-{% extends 'app_name/base.html' %}
+{% extends 'polls/base.html' %}
 
 {% block title %}Dashboard - EcoRodagem{% endblock %}
 
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Visão geral dos seus veículos e consumo{% endblock %}
+
 {% block navbar_actions %}
-<button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-    <i class="fas fa-plus mr-2"></i>Novo
-</button>
+<div class="flex items-center space-x-3">
+    <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center">
+    <i class="fas fa-plus mr-2"></i>
+    Novo Abastecimento
+    </button>
+    <button class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+    <i class="fas fa-download mr-2"></i>
+    Exportar
+    </button>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
-    <p class="text-gray-600">Visão geral dos seus veículos e consumo</p>
-</div>
-
 <!-- Stats Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-                <i class="fas fa-car text-blue-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Veículos</p>
-                <p class="text-2xl font-bold text-gray-900">{{ total_veiculos }}</p>
-            </div>
-        </div>
+    <!-- Total Veículos -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div class="flex items-center">
+    <div class="p-3 bg-blue-100 rounded-lg">
+    <i class="fas fa-car text-blue-600 text-xl"></i>
     </div>
-    
-    <!-- Adicione mais cards aqui -->
+    <div class="ml-4">
+    <p class="text-sm font-medium text-gray-600">Total de Veículos</p>
+    <p class="text-2xl font-bold text-gray-900">{{ total_veiculos|default:0 }}</p>
+    <p class="text-xs text-green-600 flex items-center mt-1">
+    <i class="fas fa-arrow-up mr-1"></i>
+    +2 este mês
+    </p>
+    </div>
+    </div>
+    </div>
+
+    <!-- Gasto Total -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div class="flex items-center">
+    <div class="p-3 bg-red-100 rounded-lg">
+    <i class="fas fa-money-bill-wave text-red-600 text-xl"></i>
+    </div>
+    <div class="ml-4">
+    <p class="text-sm font-medium text-gray-600">Gasto Total (Mês)</p>
+    <p class="text-2xl font-bold text-gray-900">R$ 1.247,50</p>
+    <p class="text-xs text-red-600 flex items-center mt-1">
+    <i class="fas fa-arrow-up mr-1"></i>
+    +12% vs mês anterior
+    </p>
+    </div>
+    </div>
+    </div>
+
+    <!-- Consumo Médio -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div class="flex items-center">
+    <div class="p-3 bg-green-100 rounded-lg">
+    <i class="fas fa-tachometer-alt text-green-600 text-xl"></i>
+    </div>
+    <div class="ml-4">
+    <p class="text-sm font-medium text-gray-600">Consumo Médio</p>
+    <p class="text-2xl font-bold text-gray-900">12,5 km/L</p>
+    <p class="text-xs text-green-600 flex items-center mt-1">
+    <i class="fas fa-arrow-up mr-1"></i>
+    +0.8 km/L
+    </p>
+    </div>
+    </div>
+    </div>
+
+    <!-- Último Abastecimento -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div class="flex items-center">
+    <div class="p-3 bg-yellow-100 rounded-lg">
+    <i class="fas fa-gas-pump text-yellow-600 text-xl"></i>
+    </div>
+    <div class="ml-4">
+    <p class="text-sm font-medium text-gray-600">Último Abastecimento</p>
+    {% if ultimo_abastecimento %}
+    <p class="text-lg font-bold text-gray-900">{{ ultimo_abastecimento.data_abastecimento|date:"d/m/Y" }}</p>
+    <p class="text-xs text-gray-500">{{ ultimo_abastecimento.veiculo.apelido }}</p>
+    {% else %}
+    <p class="text-lg font-bold text-gray-900">Nenhum</p>
+    <p class="text-xs text-gray-500">Registre seu primeiro</p>
+    {% endif %}
+    </div>
+    </div>
+    </div>
 </div>
 
-<!-- Resto do conteúdo do dashboard -->
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Gráfico de Gastos -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-gray-900">Gastos por Mês</h3>
+    <div class="flex items-center space-x-2">
+    <button class="text-sm text-gray-500 hover:text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100">6M</button>
+    <button class="text-sm bg-primary-100 text-primary-700 px-3 py-1 rounded-md">1A</button>
+    </div>
+    </div>
+    <div class="h-64">
+    <canvas id="expenseChart"></canvas>
+    </div>
+    </div>
+
+    <!-- Gráfico de Consumo -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-gray-900">Consumo por Veículo</h3>
+    <button class="text-sm text-gray-500 hover:text-gray-700">
+    <i class="fas fa-ellipsis-h"></i>
+    </button>
+    </div>
+    <div class="h-64">
+    <canvas id="consumptionChart"></canvas>
+    </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Atividades Recentes -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-gray-900">Atividades Recentes</h3>
+    <a href="#" class="text-sm text-primary-600 hover:text-primary-700">Ver todas</a>
+    </div>
+    </div>
+    <div class="p-6">
+    <div class="space-y-4">
+    <!-- Activity Item -->
+    <div class="flex items-start space-x-4">
+    <div class="flex-shrink-0">
+    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+    <i class="fas fa-gas-pump text-green-600 text-sm"></i>
+    </div>
+    </div>
+    <div class="flex-1 min-w-0">
+    <p class="text-sm text-gray-900">
+    <span class="font-medium">Civic</span> foi abastecido
+    </p>
+    <p class="text-xs text-gray-500">45L • R$ 315,00 • Posto Shell</p>
+    <p class="text-xs text-gray-400">2 horas atrás</p>
+    </div>
+    <div class="text-right">
+    <span class="text-sm font-medium text-gray-900">R$ 315,00</span>
+    </div>
+    </div>
+
+    <!-- Activity Item -->
+    <div class="flex items-start space-x-4">
+    <div class="flex-shrink-0">
+    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+    <i class="fas fa-car text-blue-600 text-sm"></i>
+    </div>
+    </div>
+    <div class="flex-1 min-w-0">
+    <p class="text-sm text-gray-900">
+    Novo veículo <span class="font-medium">Corolla</span> adicionado
+    </p>
+    <p class="text-xs text-gray-500">Toyota • 2022 • Prata</p>
+    <p class="text-xs text-gray-400">1 dia atrás</p>
+    </div>
+    </div>
+
+    <!-- Activity Item -->
+    <div class="flex items-start space-x-4">
+    <div class="flex-shrink-0">
+    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+    <i class="fas fa-chart-line text-yellow-600 text-sm"></i>
+    </div>
+    </div>
+    <div class="flex-1 min-w-0">
+    <p class="text-sm text-gray-900">
+    Relatório mensal gerado
+    </p>
+    <p class="text-xs text-gray-500">Setembro 2024 • 15 abastecimentos</p>
+    <p class="text-xs text-gray-400">3 dias atrás</p>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+    <h3 class="text-lg font-semibold text-gray-900">Ações Rápidas</h3>
+    </div>
+    <div class="p-6">
+    <div class="space-y-3">
+    <button class="w-full flex items-center justify-between p-4 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors group">
+    <div class="flex items-center">
+    <i class="fas fa-gas-pump text-primary-600 mr-3"></i>
+    <span class="text-sm font-medium text-gray-900">Registrar Abastecimento</span>
+    </div>
+    <i class="fas fa-arrow-right text-primary-600 group-hover:translate-x-1 transition-transform"></i>
+    </button>
+
+    <button class="w-full flex items-center justify-between p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group">
+    <div class="flex items-center">
+    <i class="fas fa-car text-blue-600 mr-3"></i>
+    <span class="text-sm font-medium text-gray-900">Adicionar Veículo</span>
+    </div>
+    <i class="fas fa-arrow-right text-blue-600 group-hover:translate-x-1 transition-transform"></i>
+    </button>
+
+    <button class="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group">
+    <div class="flex items-center">
+    <i class="fas fa-chart-bar text-green-600 mr-3"></i>
+    <span class="text-sm font-medium text-gray-900">Ver Relatórios</span>
+    </div>
+    <i class="fas fa-arrow-right text-green-600 group-hover:translate-x-1 transition-transform"></i>
+    </button>
+
+    <button class="w-full flex items-center justify-between p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors group">
+    <div class="flex items-center">
+    <i class="fas fa-map-marker-alt text-yellow-600 mr-3"></i>
+    <span class="text-sm font-medium text-gray-900">Encontrar Postos</span>
+    </div>
+    <i class="fas fa-arrow-right text-yellow-600 group-hover:translate-x-1 transition-transform"></i>
+    </button>
+    </div>
+    </div>
+    </div>
+</div>
+
+<!-- Floating Action Button (Mobile) -->
+<div class="fixed bottom-6 right-6 lg:hidden">
+    <button class="bg-primary-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-primary-700 transition-colors flex items-center justify-center">
+    <i class="fas fa-plus text-xl"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize dashboard charts when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboardCharts();
+    });
+</script>
 {% endblock %}

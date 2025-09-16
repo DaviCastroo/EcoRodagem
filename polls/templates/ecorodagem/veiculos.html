@@ -1,0 +1,187 @@
+{% extends 'polls/base.html' %}
+
+{% block title %}Veículos - EcoRodagem{% endblock %}
+
+{% block page_title %}Meus Veículos{% endblock %}
+{% block page_subtitle %}Gerencie sua frota de veículos{% endblock %}
+
+{% block navbar_actions %}
+<div class="flex items-center space-x-3">
+    <button id="addVehicleBtn" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center">
+    <i class="fas fa-plus mr-2"></i>
+    Adicionar Veículo
+    </button>
+    <button class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+    <i class="fas fa-download mr-2"></i>
+    Exportar
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Lista de Veículos -->
+<div id="vehicles-list">
+    <!-- Filtros e Busca -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- Busca -->
+    <div class="relative">
+    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+    <input type="text" placeholder="Buscar veículos..."
+    class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-full sm:w-64"
+    data-search="vehicles-table">
+    </div>
+
+    <!-- Filtro por marca -->
+    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+    <option value="">Todas as marcas</option>
+    <option value="toyota">Toyota</option>
+    <option value="honda">Honda</option>
+    <option value="hyundai">Hyundai</option>
+    <option value="chevrolet">Chevrolet</option>
+    </select>
+    </div>
+
+    <!-- Visualização -->
+    <div class="flex items-center space-x-2">
+    <span class="text-sm text-gray-500">Visualização:</span>
+    <button class="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+    <i class="fas fa-th-large"></i>
+    </button>
+    <button class="p-2 text-primary-600 bg-primary-50 rounded-lg">
+    <i class="fas fa-list"></i>
+    </button>
+    </div>
+    </div>
+    </div>
+
+    <!-- Tabela de Veículos -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+    <table id="vehicles-table" class="w-full">
+    <thead class="bg-gray-50">
+    <tr>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+    <button class="flex items-center space-x-1 hover:text-gray-700" data-sort="apelido" data-table="vehicles-table">
+    <span>Veículo</span>
+    <i class="fas fa-sort text-xs"></i>
+    </button>
+    </th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+    <button class="flex items-center space-x-1 hover:text-gray-700" data-sort="marca" data-table="vehicles-table">
+    <span>Marca/Modelo</span>
+    <i class="fas fa-sort text-xs"></i>
+    </button>
+    </th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Placa</th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ano</th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hodômetro</th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Consumo Médio</th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+    </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+    {% for veiculo in veiculos %}
+    <tr class="hover:bg-gray-50 transition-colors">
+    <td class="px-6 py-4 whitespace-nowrap" data-column="apelido">
+    <div class="flex items-center">
+    <div class="flex-shrink-0 h-12 w-12">
+    <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+    <i class="fas fa-car text-white text-lg"></i>
+    </div>
+    </div>
+    <div class="ml-4">
+    <div class="text-sm font-medium text-gray-900">{{ veiculo.apelido|title }}</div>
+    <div class="text-sm text-gray-500">{{ veiculo.cor|title }}</div>
+    </div>
+    </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap" data-column="marca">
+    <div class="text-sm text-gray-900">{{ veiculo.marca|title }}</div>
+    <div class="text-sm text-gray-500">{{ veiculo.modelo|title }}</div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+    {{ veiculo.placa|upper }}
+    </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    {{ veiculo.ano }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    {{ veiculo.hodometro|floatformat:0 }} km
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+    <div class="flex items-center">
+    <span class="text-sm font-medium">12.5 km/L</span>
+    <span class="ml-2 text-xs text-green-600 flex items-center">
+    <i class="fas fa-arrow-up mr-1"></i>
+    +0.3
+    </span>
+    </div>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+    <span class="vehicle-status active">
+    <i class="fas fa-circle mr-1 text-xs"></i>
+    Ativo
+    </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    <div class="flex items-center space-x-2">
+    <button class="text-primary-600 hover:text-primary-900 p-1 rounded hover:bg-primary-50 transition-colors" title="Ver detalhes">
+    <i class="fas fa-eye"></i>
+    </button>
+    <button class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors" title="Editar">
+    <i class="fas fa-edit"></i>
+    </button>
+    <button class="text-yellow-600 hover:text-yellow-900 p-1 rounded hover:bg-yellow-50 transition-colors" title="Abastecer">
+    <i class="fas fa-gas-pump"></i>
+    </button>
+    <button class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+    data-delete="veículo" data-id="{{ veiculo.id }}" title="Excluir">
+    <i class="fas fa-trash"></i>
+    </button>
+    </div>
+    </td>
+    </tr>
+    {% empty %}
+    <tr>
+    <td colspan="8" class="px-6 py-12 text-center">
+    <div class="flex flex-col items-center">
+    <i class="fas fa-car text-gray-300 text-6xl mb-4"></i>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum veículo cadastrado</h3>
+    <p class="text-gray-500 mb-4">Comece adicionando seu primeiro veículo</p>
+    <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+    <i class="fas fa-plus mr-2"></i>
+    Adicionar Veículo
+    </button>
+    </div>
+    </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Máscara para placa
+    document.addEventListener('DOMContentLoaded', function() {
+    const placaInput = document.getElementById('id_placa');
+    if (placaInput) {
+    placaInput.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (value.length > 3) {
+    value = value.substring(0, 3) + '-' + value.substring(3, 7);
+    }
+    e.target.value = value;
+    });
+    }
+    });
+</script>
+{% endblock %}
