@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Veículos - EcoRodagem{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">
+                <i class="fas fa-car text-primary"></i>
+                Meus Veículos
+            </h1>
+            <p class="lead text-muted">Gerencie sua frota de veículos</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle"></i> Cadastrar Veículo
+            </a>
+        </div>
+    </div>
+
+    {% if veiculos %}
+    <!-- Grid de Veículos -->
+    <div class="row">
+        {% for veiculo in veiculos %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <i class="fas fa-car fa-3x text-primary mb-2"></i>
+                    <h5 class="mb-0">{{ veiculo.apelido|default:"Sem nome" }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Placa:</strong></div>
+                        <div class="col-6">{{ veiculo.placa|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Marca:</strong></div>
+                        <div class="col-6">{{ veiculo.marca|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Modelo:</strong></div>
+                        <div class="col-6">{{ veiculo.modelo|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Ano:</strong></div>
+                        <div class="col-6">{{ veiculo.ano|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>Cor:</strong></div>
+                        <div class="col-6">{{ veiculo.cor|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6"><strong>KM Atual:</strong></div>
+                        <div class="col-6">{{ veiculo.hodometro|default:"0" }} km</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6"><strong>Tanque:</strong></div>
+                        <div class="col-6">{{ veiculo.tanqueComb|default:"0" }}L</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-6">
+                            <button class="btn btn-warning btn-sm w-100">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-gas-pump"></i> Abastecer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Estatísticas dos Veículos -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Estatísticas da Frota
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-primary">{{ veiculos|length }}</h3>
+                                <p class="text-muted">Total de Veículos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-success">0</h3>
+                                <p class="text-muted">Abastecimentos Este Mês</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-warning">R$ 0,00</h3>
+                                <p class="text-muted">Gasto Este Mês</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-info">0 km/l</h3>
+                            <p class="text-muted">Média de Consumo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Estado Vazio -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-car fa-5x text-muted mb-4"></i>
+                    <h2 class="text-muted mb-3">Nenhum veículo cadastrado</h2>
+                    <p class="lead text-muted mb-4">
+                        Comece cadastrando seu primeiro veículo para começar a controlar seus gastos com combustível.
+                    </p>
+                    <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Cadastrar Primeiro Veículo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Adiciona efeito hover nos cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card');
+
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+                this.style.transition = 'all 0.3s ease';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+{% endblock %}

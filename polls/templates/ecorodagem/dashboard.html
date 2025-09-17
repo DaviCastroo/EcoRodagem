@@ -1,35 +1,191 @@
-{% extends 'app_name/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard - EcoRodagem{% endblock %}
 
-{% block navbar_actions %}
-<button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-    <i class="fas fa-plus mr-2"></i>Novo
-</button>
-{% endblock %}
-
 {% block content %}
-<div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
-    <p class="text-gray-600">Visão geral dos seus veículos e consumo</p>
-</div>
+<div class="fade-in">
+    <!-- Header do Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-center mb-4">
+                <i class="fas fa-tachometer-alt text-primary"></i>
+                Dashboard EcoRodagem
+            </h1>
+            <p class="lead text-center text-muted">
+                Controle inteligente do seu consumo de combustível
+            </p>
+        </div>
+    </div>
 
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex items-center">
-            <div class="p-3 bg-blue-100 rounded-lg">
-                <i class="fas fa-car text-blue-600 text-xl"></i>
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="stats-card green pulse">
+                <i class="fas fa-car icon-large"></i>
+                <div class="stats-number">{{ total_veiculos|default:0 }}</div>
+                <div class="stats-label">Veículos Cadastrados</div>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">Veículos</p>
-                <p class="text-2xl font-bold text-gray-900">{{ total_veiculos }}</p>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card blue">
+                <i class="fas fa-gas-pump icon-large"></i>
+                <div class="stats-number">{{ total_abastecimentos|default:0 }}</div>
+                <div class="stats-label">Abastecimentos</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card orange">
+                <i class="fas fa-dollar-sign icon-large"></i>
+                <div class="stats-number">R$ {{ gasto_total|default:"0,00" }}</div>
+                <div class="stats-label">Gasto Total</div>
             </div>
         </div>
     </div>
-    
-    <!-- Adicione mais cards aqui -->
-</div>
 
-<!-- Resto do conteúdo do dashboard -->
+    <!-- Ações Rápidas -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bolt"></i> Ações Rápidas
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'cadastrar_veiculo' %}" class="btn btn-primary w-100 py-3">
+                                <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                                Cadastrar Veículo
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn btn-success w-100 py-3">
+                                <i class="fas fa-gas-pump fa-2x d-block mb-2"></i>
+                                Registrar Abastecimento
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'veiculos' %}" class="btn btn-warning w-100 py-3">
+                                <i class="fas fa-list fa-2x d-block mb-2"></i>
+                                Ver Veículos
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn btn-info w-100 py-3">
+                                <i class="fas fa-chart-line fa-2x d-block mb-2"></i>
+                                Relatórios
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Último Abastecimento -->
+    {% if ultimo_abastecimento %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clock"></i> Último Abastecimento
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Veículo:</strong> {{ ultimo_abastecimento.veiculo.apelido|default:"N/A" }}</p>
+                            <p><strong>Data:</strong> {{ ultimo_abastecimento.data_abastecimento|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Combustível:</strong> {{ ultimo_abastecimento.combustivel|default:"N/A" }}</p>
+                            <p><strong>Valor:</strong> R$ {{ ultimo_abastecimento.valor_total|default:"0,00" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-gas-pump fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum abastecimento registrado</h4>
+                    <p class="text-muted">Comece registrando seu primeiro abastecimento!</p>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Registrar Primeiro Abastecimento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Dicas Eco -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-leaf"></i> Dicas EcoRodagem
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-tachometer-alt fa-3x text-success mb-3"></i>
+                                <h5>Velocidade Constante</h5>
+                                <p class="text-muted">Mantenha velocidade constante para economizar combustível.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-tools fa-3x text-warning mb-3"></i>
+                                <h5>Manutenção Regular</h5>
+                                <p class="text-muted">Faça revisões periódicas para manter a eficiência.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-route fa-3x text-info mb-3"></i>
+                                <h5>Planeje Rotas</h5>
+                                <p class="text-muted">Evite trânsito pesado e escolha rotas mais eficientes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animação dos números das estatísticas
+    document.addEventListener('DOMContentLoaded', function() {
+        const statsNumbers = document.querySelectorAll('.stats-number');
+
+        statsNumbers.forEach(stat => {
+            const finalValue = parseInt(stat.textContent) || 0;
+            let currentValue = 0;
+            const increment = finalValue / 50;
+
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= finalValue) {
+                    stat.textContent = finalValue;
+                    clearInterval(timer);
+                } else {
+                    stat.textContent = Math.floor(currentValue);
+                }
+            }, 30);
+        });
+    });
+</script>
 {% endblock %}

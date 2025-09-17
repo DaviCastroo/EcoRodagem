@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Veículo - EcoRodagem{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5">
+                <i class="fas fa-plus-circle text-success"></i>
+                Cadastrar Veículo
+            </h1>
+            <p class="lead text-muted">Adicione um novo veículo à sua frota</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'veiculos' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-car"></i> Dados do Veículo
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="cadastroVeiculoForm">
+                        {% csrf_token %}
+
+                        <!-- Informações Básicas -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle"></i> Informações Básicas
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="apelido" class="form-label">
+                                    <i class="fas fa-tag"></i> Apelido do Veículo *
+                                </label>
+                                <input type="text" class="form-control" id="apelido" name="apelido" 
+                                       placeholder="Ex: Meu Civic, Carro da Família..." required>
+                                <div class="form-text">Nome carinhoso para identificar seu veículo</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="placa" class="form-label">
+                                    <i class="fas fa-id-card"></i> Placa *
+                                </label>
+                                <input type="text" class="form-control" id="placa" name="placa" 
+                                       placeholder="ABC-1234" maxlength="8" required>
+                                <div class="form-text">Formato: ABC-1234 ou ABC1234</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="marca" class="form-label">
+                                    <i class="fas fa-industry"></i> Marca *
+                                </label>
+                                <select class="form-control" id="marca" name="marca" required>
+                                    <option value="">Selecione a marca</option>
+                                    <option value="Chevrolet">Chevrolet</option>
+                                    <option value="Ford">Ford</option>
+                                    <option value="Volkswagen">Volkswagen</option>
+                                    <option value="Fiat">Fiat</option>
+                                    <option value="Honda">Honda</option>
+                                    <option value="Toyota">Toyota</option>
+                                    <option value="Hyundai">Hyundai</option>
+                                    <option value="Nissan">Nissan</option>
+                                    <option value="Renault">Renault</option>
+                                    <option value="Peugeot">Peugeot</option>
+                                    <option value="Citroën">Citroën</option>
+                                    <option value="Jeep">Jeep</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="modelo" class="form-label">
+                                    <i class="fas fa-car-side"></i> Modelo *
+                                </label>
+                                <input type="text" class="form-control" id="modelo" name="modelo" 
+                                       placeholder="Ex: Civic, Corolla, Onix..." required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ano" class="form-label">
+                                    <i class="fas fa-calendar"></i> Ano *
+                                </label>
+                                <input type="text" class="form-control" id="ano" name="ano" 
+                                       placeholder="Ex: 2020/2021" required>
+                                <div class="form-text">Formato: Fabricação/Modelo</div>
+                            </div>
+                        </div>
+
+                        <!-- Características -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-palette"></i> Características
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cor" class="form-label">
+                                    <i class="fas fa-palette"></i> Cor
+                                </label>
+                                <select class="form-control" id="cor" name="cor">
+                                    <option value="">Selecione a cor</option>
+                                    <option value="Branco">Branco</option>
+                                    <option value="Preto">Preto</option>
+                                    <option value="Prata">Prata</option>
+                                    <option value="Cinza">Cinza</option>
+                                    <option value="Vermelho">Vermelho</option>
+                                    <option value="Azul">Azul</option>
+                                    <option value="Verde">Verde</option>
+                                    <option value="Amarelo">Amarelo</option>
+                                    <option value="Marrom">Marrom</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tanqueComb" class="form-label">
+                                    <i class="fas fa-gas-pump"></i> Capacidade do Tanque (Litros) *
+                                </label>
+                                <input type="number" class="form-control" id="tanqueComb" name="tanqueComb" 
+                                       placeholder="Ex: 50" min="1" max="200" required>
+                                <div class="form-text">Capacidade total em litros</div>
+                            </div>
+                        </div>
+
+                        <!-- Quilometragem -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-tachometer-alt"></i> Quilometragem
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="hodometro" class="form-label">
+                                    <i class="fas fa-tachometer-alt"></i> Quilometragem Atual *
+                                </label>
+                                <input type="number" class="form-control" id="hodometro" name="hodometro" 
+                                       placeholder="Ex: 45000" min="0" required>
+                                <div class="form-text">Quilometragem atual do veículo</div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="alert alert-info w-100">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Dica:</strong> Verifique o hodômetro do seu veículo para inserir a quilometragem correta.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'veiculos' %}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-save"></i> Cadastrar Veículo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Formatação automática da placa
+        const placaInput = document.getElementById('placa');
+        placaInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+            if (value.length > 3) {
+                value = value.substring(0, 3) + '-' + value.substring(3, 7);
+            }
+
+            e.target.value = value;
+        });
+
+        // Validação do formulário
+        const form = document.getElementById('cadastroVeiculoForm');
+        form.addEventListener('submit', function(e) {
+            const placa = document.getElementById('placa').value;
+            const placaRegex = /^[A-Z]{3}-?[0-9]{4}$/;
+
+            if (!placaRegex.test(placa.replace('-', ''))) {
+                e.preventDefault();
+                alert('Por favor, insira uma placa válida no formato ABC-1234');
+                return false;
+            }
+        });
+
+        // Animação nos campos de input
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'all 0.2s ease';
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    });
+</script>
+{% endblock %}
