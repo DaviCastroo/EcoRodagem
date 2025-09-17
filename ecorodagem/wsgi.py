@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'css.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ecorodagem.settings')
 
 application = get_wsgi_application()
