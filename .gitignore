@@ -1,0 +1,5 @@
+.idea
+.venv
+.gitattributes
+README.md
+db.sqlite3
