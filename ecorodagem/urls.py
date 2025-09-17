@@ -1,5 +1,5 @@
 """
-URL configuration for ecorodagem project.
+URL configuration for polls project.
 """
 from django.contrib import admin
 from django.urls import path, include

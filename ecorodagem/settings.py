@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ecorodagem.urls'
+ROOT_URLCONF = 'polls.urls'
 
 TEMPLATES = [
     {
@@ -73,8 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ecorodagem.wsgi.application'  
-
+WSGI_APPLICATION = 'ecorodagem.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
