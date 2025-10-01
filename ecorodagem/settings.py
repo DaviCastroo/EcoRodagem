@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'polls.urls'
+ROOT_URLCONF = 'ecorodagem.urls'
 
 TEMPLATES = [
     {
