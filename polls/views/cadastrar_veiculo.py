@@ -1,37 +1,7 @@
+from polls.models.veiculos import *
+from polls.models.abastecer import *
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponse
-from .models import Veiculo, Abastecer
-
-def dashboard(request):
-    """Dashboard principal com estatísticas"""
-    total_veiculos = Veiculo.objects.count()
-    total_abastecimentos = Abastecer.objects.count()
-    ultimo_abastecimento = Abastecer.objects.order_by('-data_abastecimento').first()
-
-    # Calcular gasto total (se houver campo valor_total no modelo)
-    gasto_total = 0
-    try:
-        abastecimentos = Abastecer.objects.all()
-        gasto_total = sum(float(a.valor_total) for a in abastecimentos if hasattr(a, 'valor_total') and a.valor_total)
-    except:
-        gasto_total = 0
-
-    context = {
-        'total_veiculos': total_veiculos,
-        'total_abastecimentos': total_abastecimentos,
-        'ultimo_abastecimento': ultimo_abastecimento,
-        'gasto_total': f"{gasto_total:.2f}".replace('.', ','),
-    }
-    return render(request, 'polls/dashboard.html', context)
-
-def veiculos(request):
-    """Lista todos os veículos cadastrados"""
-    veiculos = Veiculo.objects.all()
-    context = {
-        'veiculos': veiculos,
-    }
-    return render(request, 'polls/veiculos.html', context)
 
 def cadastrar_veiculo(request):
     """Cadastra um novo veículo"""
@@ -57,7 +27,7 @@ def cadastrar_veiculo(request):
                 messages.error(request, f'Já existe um veículo cadastrado com a placa {placa}.')
                 return render(request, 'polls/cadastrar_veiculo.html')
 
-            # Criar o veículo
+            # Construtor
             veiculo = Veiculo.objects.create(
                 placa=placa,
                 apelido=apelido,
@@ -80,8 +50,3 @@ def cadastrar_veiculo(request):
             return render(request, 'polls/cadastrar_veiculo.html')
 
     return render(request, 'polls/cadastrar_veiculo.html')
-
-# Função de exemplo para página inicial (se necessário)
-def index(request):
-    """Página inicial - redireciona para dashboard"""
-    return redirect('dashboard')

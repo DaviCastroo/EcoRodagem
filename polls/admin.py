@@ -1,4 +1,5 @@
-from .models import Veiculo, Abastecer 
+from polls.models.veiculos import *
+from polls.models.abastecer import *
 from django.contrib import admin
 
 admin.site.register(Veiculo)

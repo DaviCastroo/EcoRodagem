@@ -1,12 +1,18 @@
 from django.urls import path
-from . import views
 from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from .views import dashboard, veiculos, cadastrar_veiculo
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.dashboard, name='dashboard'),
-    path('veiculos/', views.veiculos, name='veiculos'),
-    path('cadastrar-veiculo/', views.cadastrar_veiculo, name='cadastrar_veiculo'),
+    # path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/', include("django.contrib.auth.urls")),
+    path('dashboard/', dashboard.dashboard, name='dashboard'),
+    path('veiculos/', veiculos.veiculos, name='veiculos'),
+    path('cadastrar-veiculo/', cadastrar_veiculo.cadastrar_veiculo, name='cadastrar_veiculo'),
+    # path('login/', registration.login , name='login'),
 
     # Adicione mais URLs conforme necessário
     # path('abastecimentos/', views.abastecimentos, name='abastecimentos'),
