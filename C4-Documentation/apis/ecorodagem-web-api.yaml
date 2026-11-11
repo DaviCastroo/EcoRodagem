@@ -1,0 +1,251 @@
+openapi: 3.1.0
+info:
+  title: EcoRodagem Web & AJAX API Specification
+  version: 1.0.0
+  description: >
+    Especificação das rotas HTTP (Server-Side Rendered Views e endpoints JSON/AJAX)
+    do container principal EcoRodagem Web Application (Django 5.2).
+servers:
+  - url: http://localhost:8000
+    description: Servidor de Desenvolvimento Django
+
+paths:
+  /:
+    get:
+      summary: Dashboard Principal
+      operationId: getDashboard
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Página HTML do Dashboard com KPIs e dados de gráficos
+
+  /veiculos/:
+    get:
+      summary: Listar Veículos da Frota
+      operationId: listVeiculos
+      tags: [Veiculos]
+      responses:
+        '200':
+          description: Página HTML listando todos os veículos do usuário
+
+  /veiculos/cadastrar/:
+    get:
+      summary: Formulário de Cadastro de Veículo
+      operationId: getCadastrarVeiculoForm
+      tags: [Veiculos]
+      responses:
+        '200':
+          description: Página HTML com formulário de veículo
+    post:
+      summary: Cadastrar Novo Veículo
+      operationId: createVeiculo
+      tags: [Veiculos]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VeiculoInput'
+      responses:
+        '302':
+          description: Redireciona para /veiculos/ após sucesso
+
+  /veiculos/{id}/editar/:
+    post:
+      summary: Editar Veículo Existente
+      operationId: updateVeiculo
+      tags: [Veiculos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VeiculoInput'
+      responses:
+        '302':
+          description: Redireciona para /veiculos/
+
+  /veiculos/{id}/excluir/:
+    delete:
+      summary: Excluir Veículo (AJAX / Modal)
+      operationId: deleteVeiculo
+      tags: [Veiculos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Confirmação JSON de exclusão
+
+  /abastecimentos/:
+    get:
+      summary: Histórico de Abastecimentos e Médias de Consumo
+      operationId: listAbastecimentos
+      tags: [Abastecimentos]
+      parameters:
+        - name: veiculo_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: combustivel
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [gasolina, etanol, diesel, gnv]
+      responses:
+        '200':
+          description: Página HTML com histórico de abastecimentos e médias (km/L)
+
+  /abastecimentos/cadastrar/:
+    get:
+      summary: Formulário de Novo Abastecimento
+      operationId: getCadastrarAbastecimentoForm
+      tags: [Abastecimentos]
+      responses:
+        '200':
+          description: Página HTML com formulário de abastecimento
+    post:
+      summary: Registrar Abastecimento e Calcular Consumo
+      operationId: createAbastecimento
+      tags: [Abastecimentos]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AbastecimentoInput'
+      responses:
+        '302':
+          description: Redireciona para /abastecimentos/ após salvar e atualizar hodômetro
+
+  /api/dashboard/charts/:
+    get:
+      summary: Dados JSON para Gráficos do Dashboard (Chart.js)
+      operationId: getDashboardChartData
+      tags: [Dashboard]
+      parameters:
+        - name: periodo
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [6m, 1a]
+            default: 6m
+      responses:
+        '200':
+          description: Dados estruturados de gastos mensais e consumo por veículo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalyticsResponse'
+
+components:
+  schemas:
+    VeiculoInput:
+      type: object
+      required: [apelido, placa, marca, modelo, hodometro, tanque_comb]
+      properties:
+        apelido:
+          type: string
+          maxLength: 50
+          example: "Meu Civic"
+        placa:
+          type: string
+          maxLength: 10
+          example: "ABC-1234"
+        marca:
+          type: string
+          maxLength: 50
+          example: "Honda"
+        modelo:
+          type: string
+          maxLength: 50
+          example: "Civic"
+        cor:
+          type: string
+          maxLength: 50
+          example: "Prata"
+        ano:
+          type: string
+          maxLength: 11
+          example: "2021/2022"
+        hodometro:
+          type: number
+          format: float
+          example: 45000.0
+        tanque_comb:
+          type: number
+          format: decimal
+          example: 56.00
+
+    AbastecimentoInput:
+      type: object
+      required: [veiculo, combustivel, litros, valor_total, hodometro_atual, data_abastecimento]
+      properties:
+        veiculo:
+          type: integer
+          description: ID do veículo abastecido
+        combustivel:
+          type: string
+          enum: [gasolina, etanol, diesel, gnv]
+        tanque_cheio:
+          type: boolean
+          default: false
+        litros:
+          type: number
+          format: decimal
+          example: 42.50
+        valor_total:
+          type: number
+          format: decimal
+          example: 246.08
+        hodometro_atual:
+          type: number
+          format: float
+          description: Quilometragem no hodômetro no momento do abastecimento
+          example: 45510.0
+        loc_posto:
+          type: string
+          maxLength: 100
+          example: "Posto Ipiranga - Av. Paulista"
+        data_abastecimento:
+          type: string
+          format: date
+          example: "2026-11-11"
+
+    DashboardAnalyticsResponse:
+      type: object
+      properties:
+        gastos_mensais:
+          type: array
+          items:
+            type: object
+            properties:
+              mes:
+                type: string
+                example: "2026-11"
+              valor_total:
+                type: number
+                example: 845.90
+        consumo_por_veiculo:
+          type: array
+          items:
+            type: object
+            properties:
+              veiculo:
+                type: string
+                example: "Meu Civic"
+              media_km_l:
+                type: number
+                example: 12.0
