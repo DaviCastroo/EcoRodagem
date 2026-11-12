@@ -1,0 +1,313 @@
+<div class="max-w-3xl mx-auto">
+  <!-- Cabeçalho com botão secundário de retorno claro -->
+  <header class="flex items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
+        {{ veiculoIdEdicao() ? 'Editar Veículo' : 'Cadastrar Novo Veículo' }}
+      </h1>
+      <p class="text-sm text-slate-600 mt-1">
+        Configure a identificação, categoria e motorização para cálculos precisos de consumo.
+      </p>
+    </div>
+    <a routerLink="/veiculos" class="btn-secondary">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      <span>Voltar sem salvar</span>
+    </a>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="salvar()" novalidate class="space-y-6">
+    <!-- BLOCO 1: Categoria e Motorização (Lei de Hick — Divulgação Progressiva) -->
+    <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+      <h2 class="text-base font-bold text-slate-900 mb-1">1. Categoria e Tipo de Propulsão</h2>
+      <p class="text-xs text-slate-600 mb-4">
+        Escolha o porte e a fonte de energia do veículo. Os campos de capacidade se adaptarão automaticamente.
+      </p>
+
+      <!-- Seletor de Categoria (Porte) -->
+      <fieldset class="mb-5">
+        <legend class="form-label">Porte do veículo *</legend>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          @for (cat of categorias; track cat.valor) {
+            <button
+              type="button"
+              (click)="selecionarCategoria(cat.valor)"
+              class="flex flex-col items-center justify-center gap-2 p-3.5 rounded-xl border text-xs font-semibold transition-all"
+              [class.border-emerald-700]="form.controls.categoria.value === cat.valor"
+              [class.bg-emerald-50]="form.controls.categoria.value === cat.valor"
+              [class.text-emerald-900]="form.controls.categoria.value === cat.valor"
+              [class.border-slate-200]="form.controls.categoria.value !== cat.valor"
+              [class.text-slate-700]="form.controls.categoria.value !== cat.valor"
+              [attr.aria-pressed]="form.controls.categoria.value === cat.valor"
+            >
+              <i [class]="cat.icone + ' text-lg'" aria-hidden="true"></i>
+              <span>{{ cat.rotulo }}</span>
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Seletor de Propulsão (Combustão, Flex, GNV, Híbrido, Elétrico) -->
+      <fieldset>
+        <legend class="form-label">Motorização / Propulsão *</legend>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          @for (prop of propulsoes; track prop.valor) {
+            <button
+              type="button"
+              (click)="selecionarPropulsao(prop.valor)"
+              class="flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all"
+              [class.border-emerald-700]="form.controls.propulsao.value === prop.valor"
+              [class.bg-emerald-50]="form.controls.propulsao.value === prop.valor"
+              [class.border-slate-200]="form.controls.propulsao.value !== prop.valor"
+              [attr.aria-pressed]="form.controls.propulsao.value === prop.valor"
+            >
+              <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                <i [class]="prop.icone + ' text-emerald-700'" aria-hidden="true"></i>
+              </div>
+              <div>
+                <span class="block text-xs font-bold text-slate-900">{{ prop.rotulo }}</span>
+                <span class="block text-[11px] text-slate-600 mt-0.5">{{ prop.descricaoCurta }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- BLOCO 2: Identificação do Veículo (Lei de Miller — Chunking) -->
+    <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+      <h2 class="text-base font-bold text-slate-900 mb-4">2. Identificação do Veículo</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Apelido -->
+        <div>
+          <label for="apelido" class="form-label">Apelido do veículo *</label>
+          <input
+            id="apelido"
+            type="text"
+            formControlName="apelido"
+            class="form-input"
+            [class.form-input-error]="temErro('apelido')"
+            placeholder="Ex: Meu Civic, BYD da Família..."
+            [attr.aria-invalid]="temErro('apelido')"
+          />
+          @if (temErro('apelido')) {
+            <p class="form-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Informe um apelido para identificar facilmente o veículo.</span>
+            </p>
+          }
+        </div>
+
+        <!-- Placa -->
+        <div>
+          <label for="placa" class="form-label">Placa (Antiga ou Mercosul) *</label>
+          <input
+            id="placa"
+            type="text"
+            formControlName="placa"
+            (input)="formatarPlacaInput($event)"
+            maxlength="8"
+            class="form-input font-mono uppercase tracking-wider"
+            [class.form-input-error]="temErro('placa')"
+            placeholder="Ex: ABC1D23 ou ABC1234"
+            [attr.aria-invalid]="temErro('placa')"
+          />
+          @if (temErro('placa')) {
+            <p class="form-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Placa inválida. Use 3 letras e 4 caracteres (ex: ABC1234 ou ABC1D23).</span>
+            </p>
+          }
+        </div>
+
+        <!-- Marca -->
+        <div>
+          <label for="marca" class="form-label">Marca / Fabricante *</label>
+          <input
+            id="marca"
+            type="text"
+            formControlName="marca"
+            list="lista-marcas"
+            class="form-input"
+            [class.form-input-error]="temErro('marca')"
+            placeholder="Ex: Honda, BYD, Toyota, Fiat..."
+          />
+          <datalist id="lista-marcas">
+            @for (m of marcasSugeridas; track m) {
+              <option [value]="m"></option>
+            }
+          </datalist>
+          @if (temErro('marca')) {
+            <p class="form-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Informe a marca do fabricante.</span>
+            </p>
+          }
+        </div>
+
+        <!-- Modelo -->
+        <div>
+          <label for="modelo" class="form-label">Modelo *</label>
+          <input
+            id="modelo"
+            type="text"
+            formControlName="modelo"
+            class="form-input"
+            [class.form-input-error]="temErro('modelo')"
+            placeholder="Ex: Civic Touring, Dolphin GS, Onix..."
+          />
+          @if (temErro('modelo')) {
+            <p class="form-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Informe o modelo do veículo.</span>
+            </p>
+          }
+        </div>
+
+        <!-- Ano -->
+        <div>
+          <label for="ano" class="form-label">Ano (Fabricação/Modelo)</label>
+          <input
+            id="ano"
+            type="text"
+            formControlName="ano"
+            class="form-input font-mono"
+            placeholder="Ex: 2024/2025"
+          />
+        </div>
+
+        <!-- Cor -->
+        <div>
+          <label for="cor" class="form-label">Cor predominante</label>
+          <input
+            id="cor"
+            type="text"
+            formControlName="cor"
+            class="form-input"
+            placeholder="Ex: Prata, Branco, Cinza..."
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOCO 3: Reservatórios Dinâmicos e Hodômetro (Divulgação Progressiva) -->
+    <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+      <h2 class="text-base font-bold text-slate-900 mb-1">3. Capacidade Energética e Quilometragem</h2>
+      <p class="text-xs text-slate-600 mb-4">
+        Exibindo apenas os reservatórios compatíveis com <strong>{{ metaPropulsaoAtual().rotulo }}</strong>.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Hodômetro -->
+        <div>
+          <label for="hodometro" class="form-label">Quilometragem no hodômetro (km) *</label>
+          <input
+            id="hodometro"
+            type="number"
+            step="0.1"
+            min="0"
+            formControlName="hodometro"
+            class="form-input font-mono tabular-nums"
+            [class.form-input-error]="temErro('hodometro')"
+            placeholder="Ex: 45000"
+          />
+          <p class="form-hint">Usado como ponto de partida para o próximo cálculo de consumo.</p>
+          @if (temErro('hodometro')) {
+            <p class="form-error" role="alert">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Informe uma quilometragem válida igual ou maior que zero.</span>
+            </p>
+          }
+        </div>
+
+        <!-- Tanque Líquido (L) — Oculto para 100% Elétrico -->
+        @if (metaPropulsaoAtual().requerTanqueLiquido) {
+          <div>
+            <label for="tanqueComb" class="form-label">Capacidade do Tanque Líquido (Litros) *</label>
+            <input
+              id="tanqueComb"
+              type="number"
+              step="0.1"
+              min="1"
+              formControlName="tanqueComb"
+              class="form-input font-mono tabular-nums"
+              [class.form-input-error]="temErro('tanqueComb')"
+              placeholder="Ex: 50"
+            />
+            <p class="form-hint">Volume máximo do tanque de combustível em litros (L).</p>
+            @if (temErro('tanqueComb')) {
+              <p class="form-error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <span>Informe a capacidade do tanque em litros (ex: 50).</span>
+              </p>
+            }
+          </div>
+        }
+
+        <!-- Cilindro GNV (m³) — Exibido apenas para BI_FUEL_GNV -->
+        @if (metaPropulsaoAtual().requerCilindroGnv) {
+          <div>
+            <label for="capacidadeGnvM3" class="form-label">Capacidade do Cilindro GNV (m³) *</label>
+            <input
+              id="capacidadeGnvM3"
+              type="number"
+              step="0.5"
+              min="1"
+              formControlName="capacidadeGnvM3"
+              class="form-input font-mono tabular-nums"
+              [class.form-input-error]="temErro('capacidadeGnvM3')"
+              placeholder="Ex: 15"
+            />
+            <p class="form-hint">Capacidade nominal do cilindro de gás natural em metros cúbicos (m³).</p>
+            @if (temErro('capacidadeGnvM3')) {
+              <p class="form-error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <span>Informe a capacidade do cilindro GNV em m³ (ex: 15).</span>
+              </p>
+            }
+          </div>
+        }
+
+        <!-- Bateria (kWh) — Exibido apenas para ELETRICO_BEV e HIBRIDO_PHEV -->
+        @if (metaPropulsaoAtual().requerBateriaKwh) {
+          <div>
+            <label for="capacidadeBateriaKwh" class="form-label">Capacidade da Bateria (kWh) *</label>
+            <input
+              id="capacidadeBateriaKwh"
+              type="number"
+              step="0.1"
+              min="1"
+              formControlName="capacidadeBateriaKwh"
+              class="form-input font-mono tabular-nums"
+              [class.form-input-error]="temErro('capacidadeBateriaKwh')"
+              placeholder="Ex: 44.9"
+            />
+            <p class="form-hint">Capacidade nominal da bateria de tração em quilowatt-hora (kWh).</p>
+            @if (temErro('capacidadeBateriaKwh')) {
+              <p class="form-error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <span>Informe a capacidade da bateria em kWh (ex: 44.9).</span>
+              </p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Barra de Ação Final (Lei de Fitts — Rótulo Claro e Orientado à Ação) -->
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <a routerLink="/veiculos" class="btn-secondary">
+        Cancelar
+      </a>
+      <button type="submit" class="btn-primary" [disabled]="salvando()">
+        @if (salvando()) {
+          <i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i>
+          <span>Salvando veículo...</span>
+        } @else {
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          <span>{{ veiculoIdEdicao() ? 'Salvar alterações do veículo' : 'Salvar novo veículo' }}</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>
