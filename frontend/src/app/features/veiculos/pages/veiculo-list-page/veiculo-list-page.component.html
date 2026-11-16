@@ -1,0 +1,189 @@
+<!-- Cabeçalho (Lei de Fitts: Único CTA primário claro para Cadastrar Veículo) -->
+<header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Meus Veículos</h1>
+    <p class="text-sm text-slate-600 mt-1">
+      Gerencie seus carros, motos e utilitários a combustão, GNV, híbridos ou elétricos.
+    </p>
+  </div>
+  <a routerLink="/veiculos/novo" class="btn-primary">
+    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    <span>Cadastrar veículo</span>
+  </a>
+</header>
+
+<!-- Barra de Busca e Filtro por Propulsão -->
+<section class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs mb-6" aria-label="Filtros da frota">
+  <div class="flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+      <input
+        type="search"
+        class="form-input pl-10"
+        placeholder="Buscar por apelido, placa, marca ou modelo..."
+        [value]="termoBusca()"
+        (input)="atualizarBusca($event)"
+        aria-label="Buscar veículos por apelido, placa, marca ou modelo"
+      />
+    </div>
+    <div class="sm:w-72">
+      <select
+        class="form-input"
+        [value]="filtroPropulsao()"
+        (change)="selecionarPropulsao($any($event.target).value)"
+        aria-label="Filtrar por tipo de propulsão"
+      >
+        <option value="TODOS">Todas as propulsões</option>
+        @for (prop of propulsoes; track prop.valor) {
+          <option [value]="prop.valor">{{ prop.rotulo }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- Estado de Carregamento (Skeleton) -->
+@if (carregando()) {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" aria-busy="true">
+    @for (item of [1, 2, 3]; track item) {
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse space-y-4">
+        <div class="h-5 w-40 bg-slate-200 rounded"></div>
+        <div class="h-4 w-28 bg-slate-100 rounded"></div>
+        <div class="h-16 bg-slate-50 rounded-xl"></div>
+      </div>
+    }
+  </div>
+} @else if (veiculosFiltrados().length === 0) {
+  <!-- Empty State Amigável -->
+  <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center max-w-lg mx-auto my-6">
+    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-4">
+      <i class="fa-solid fa-car-side text-2xl" aria-hidden="true"></i>
+    </div>
+    <h2 class="text-base font-bold text-slate-900">Nenhum veículo encontrado</h2>
+    <p class="text-sm text-slate-600 mt-1 mb-6">
+      Cadastre seu primeiro veículo para começar a registrar abastecimentos ou recargas elétricas.
+    </p>
+    <a routerLink="/veiculos/novo" class="btn-primary">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>Cadastrar primeiro veículo</span>
+    </a>
+  </div>
+} @else {
+  <!-- Grid Responsivo de Cards de Veículos (Lei de Miller — Informação Agrupada) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    @for (v of veiculosFiltrados(); track v.id) {
+      <article class="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between p-6">
+        <div>
+          <!-- Topo do Card: Categoria + Apelido + Placa -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                <i [class]="categoriasMap[v.categoria].icone" aria-hidden="true"></i>
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-base font-bold text-slate-900 truncate">{{ v.apelido }}</h2>
+                <p class="text-xs text-slate-600 truncate">
+                  {{ v.marca }} {{ v.modelo }}
+                  @if (v.ano) {
+                    <span> • {{ v.ano }}</span>
+                  }
+                  @if (v.cor) {
+                    <span> • {{ v.cor }}</span>
+                  }
+                </p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono text-xs font-bold tracking-wider shrink-0">
+              {{ v.placa }}
+            </span>
+          </div>
+
+          <!-- Badge de Propulsão -->
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <app-propulsion-badge [propulsao]="v.propulsao" />
+            <span class="text-xs text-slate-500">
+              {{ categoriasMap[v.categoria].rotulo }}
+            </span>
+          </div>
+
+          <!-- Métricas Agrupadas (Hodômetro, Consumo Médio e Custo/km) -->
+          <div class="grid grid-cols-3 gap-2 mt-5 p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-center">
+            <div>
+              <span class="block text-[11px] font-medium text-slate-500">Hodômetro</span>
+              <span class="block text-xs font-bold text-slate-900 font-mono tabular-nums mt-0.5">
+                {{ v.hodometroAtual | number:'1.0-1' }} km
+              </span>
+            </div>
+            <div class="border-x border-slate-200/80 px-1">
+              <span class="block text-[11px] font-medium text-slate-500">Consumo</span>
+              <span class="block text-xs font-bold text-emerald-800 font-mono tabular-nums mt-0.5">
+                {{ v.consumoMedio | number:'1.2-2' }} {{ v.unidadeConsumoPrincipal }}
+              </span>
+            </div>
+            <div>
+              <span class="block text-[11px] font-medium text-slate-500">Custo / km</span>
+              <span class="block text-xs font-bold text-slate-900 font-mono tabular-nums mt-0.5">
+                {{ v.custoMedioPorKm | currency:'BRL':'symbol':'1.2-3' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Capacidades do(s) Reservatório(s) -->
+          <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">
+            @if (v.tanqueComb) {
+              <span><i class="fa-solid fa-gas-pump text-slate-400 mr-1" aria-hidden="true"></i>Tanque: {{ v.tanqueComb }} L</span>
+            }
+            @if (v.capacidadeGnvM3) {
+              <span><i class="fa-solid fa-fire-flame-simple text-sky-600 mr-1" aria-hidden="true"></i>GNV: {{ v.capacidadeGnvM3 }} m³</span>
+            }
+            @if (v.capacidadeBateriaKwh) {
+              <span><i class="fa-solid fa-bolt text-indigo-600 mr-1" aria-hidden="true"></i>Bateria: {{ v.capacidadeBateriaKwh }} kWh</span>
+            }
+          </div>
+        </div>
+
+        <!-- Ações do Card (Rótulos explícitos + Área de toque acessível) -->
+        <div class="flex items-center justify-between gap-2 mt-5 pt-4 border-t border-slate-100">
+          <a
+            [routerLink]="['/abastecimentos/novo']"
+            [queryParams]="{ veiculoId: v.id }"
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold transition-colors"
+          >
+            <i class="fa-solid fa-gas-pump" aria-hidden="true"></i>
+            <span>Abastecer / Recarregar</span>
+          </a>
+
+          <div class="flex items-center gap-1">
+            <a
+              [routerLink]="['/veiculos', v.id, 'editar']"
+              class="p-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+              [attr.aria-label]="'Editar veículo ' + v.apelido"
+              title="Editar dados do veículo"
+            >
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+            </a>
+            <button
+              type="button"
+              class="p-2.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
+              (click)="solicitarExclusao(v)"
+              [attr.aria-label]="'Excluir veículo ' + v.apelido"
+              title="Excluir veículo"
+            >
+              <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+}
+
+<!-- Modal de Confirmação de Exclusão -->
+<app-confirm-dialog
+  [aberto]="veiculoParaExcluir() !== null"
+  [titulo]="'Excluir ' + (veiculoParaExcluir()?.apelido ?? 'veículo') + '?'"
+  [mensagem]="'Esta ação removerá o veículo de placa ' + (veiculoParaExcluir()?.placa ?? '') + ' e todo o histórico de abastecimentos vinculado a ele.'"
+  rotuloConfirmar="Sim, excluir veículo"
+  (cancelar)="veiculoParaExcluir.set(null)"
+  (confirmar)="confirmarExclusao()"
+/>

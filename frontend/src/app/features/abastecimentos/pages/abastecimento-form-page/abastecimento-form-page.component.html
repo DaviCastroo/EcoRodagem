@@ -1,0 +1,281 @@
+<div class="max-w-5xl mx-auto">
+  <!-- Cabeçalho -->
+  <header class="flex items-center justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Registrar Abastecimento ou Recarga</h1>
+      <p class="text-sm text-slate-600 mt-1">
+        Informe os dados da bomba ou eletroposto. O preço unitário e a média serão calculados automaticamente.
+      </p>
+    </div>
+    <a routerLink="/abastecimentos" class="btn-secondary">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      <span>Voltar sem salvar</span>
+    </a>
+  </header>
+
+  @if (!carregandoVeiculos() && veiculos().length === 0) {
+    <div class="bg-white p-10 rounded-2xl border border-slate-200 text-center max-w-lg mx-auto my-8">
+      <h2 class="text-base font-bold text-slate-900">Cadastre um veículo primeiro</h2>
+      <p class="text-sm text-slate-600 mt-1 mb-5">
+        Para lançar um abastecimento ou recarga, é necessário ter pelo menos um veículo cadastrado na sua frota.
+      </p>
+      <a routerLink="/veiculos/novo" class="btn-primary">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Cadastrar veículo agora</span>
+      </a>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="salvar()" novalidate class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <!-- Coluna Principal do Formulário (2/3) -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- PASSO 1: Seleção Visual do Veículo -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+          <h2 class="text-base font-bold text-slate-900 mb-1">1. Qual veículo você abasteceu?</h2>
+          <p class="text-xs text-slate-600 mb-4">
+            Apenas os combustíveis/recargas compatíveis com a motorização do veículo escolhido serão exibidos.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (v of veiculos(); track v.id) {
+              <button
+                type="button"
+                (click)="selecionarVeiculo(v)"
+                class="flex items-start justify-between gap-3 p-4 rounded-xl border text-left transition-all"
+                [class.border-emerald-700]="veiculoSelecionado()?.id === v.id"
+                [class.bg-emerald-50]="veiculoSelecionado()?.id === v.id"
+                [class.border-slate-200]="veiculoSelecionado()?.id !== v.id"
+                [attr.aria-pressed]="veiculoSelecionado()?.id === v.id"
+              >
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold text-slate-900 truncate">{{ v.apelido }}</span>
+                  <span class="block text-xs text-slate-600 font-mono mt-0.5">
+                    {{ v.placa }} • {{ v.hodometroAtual | number:'1.0-1' }} km
+                  </span>
+                  <div class="mt-2">
+                    <app-propulsion-badge [propulsao]="v.propulsao" />
+                  </div>
+                </div>
+                @if (veiculoSelecionado()?.id === v.id) {
+                  <i class="fa-solid fa-circle-check text-emerald-700 text-lg shrink-0" aria-hidden="true"></i>
+                }
+              </button>
+            }
+          </div>
+        </section>
+
+        <!-- PASSO 2: Dados da Bomba ou Eletroposto -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+          <h2 class="text-base font-bold text-slate-900 mb-4">2. Dados do Energético e Valor</h2>
+
+          <!-- Seletor de Combustível / Recarga Filtrado pela Propulsão (Lei de Hick) -->
+          <fieldset class="mb-5">
+            <legend class="form-label">Fonte de energia utilizada *</legend>
+            <div class="flex flex-wrap gap-2.5">
+              @for (c of combustiveisCompativeis(); track c.valor) {
+                <button
+                  type="button"
+                  (click)="selecionarCombustivel(c.valor)"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all"
+                  [class.border-emerald-700]="form.controls.combustivel.value === c.valor"
+                  [class.bg-emerald-700]="form.controls.combustivel.value === c.valor"
+                  [class.text-white]="form.controls.combustivel.value === c.valor"
+                  [class.border-slate-300]="form.controls.combustivel.value !== c.valor"
+                  [class.bg-white]="form.controls.combustivel.value !== c.valor"
+                  [class.text-slate-700]="form.controls.combustivel.value !== c.valor"
+                >
+                  <i [class]="c.icone" aria-hidden="true"></i>
+                  <span>{{ c.rotulo }} ({{ c.unidadeVolume }})</span>
+                </button>
+              }
+            </div>
+          </fieldset>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Quantidade (L, m³ ou kWh) -->
+            <div>
+              <label for="litros" class="form-label">
+                Quantidade ({{ metaCombustivelAtual().unidadeVolume }}) *
+              </label>
+              <input
+                id="litros"
+                type="number"
+                step="0.01"
+                min="0.01"
+                formControlName="litros"
+                class="form-input font-mono tabular-nums"
+                [class.form-input-error]="temErro('litros')"
+                [placeholder]="'Ex: 40.00 ' + metaCombustivelAtual().unidadeVolume"
+              />
+              @if (temErro('litros')) {
+                <p class="form-error" role="alert">
+                  <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                  <span>Informe a quantidade em {{ metaCombustivelAtual().unidadeVolume }}.</span>
+                </p>
+              }
+            </div>
+
+            <!-- Valor Total Pago (R$) -->
+            <div>
+              <label for="valorTotal" class="form-label">Valor total pago (R$) *</label>
+              <input
+                id="valorTotal"
+                type="number"
+                step="0.01"
+                min="0.01"
+                formControlName="valorTotal"
+                class="form-input font-mono tabular-nums"
+                [class.form-input-error]="temErro('valorTotal')"
+                placeholder="Ex: 240.00"
+              />
+              @if (temErro('valorTotal')) {
+                <p class="form-error" role="alert">
+                  <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                  <span>Informe o valor total pago em reais.</span>
+                </p>
+              }
+            </div>
+
+            <!-- Data -->
+            <div>
+              <label for="dataAbastecimento" class="form-label">Data do registro *</label>
+              <input
+                id="dataAbastecimento"
+                type="date"
+                formControlName="dataAbastecimento"
+                class="form-input font-mono"
+              />
+            </div>
+          </div>
+
+          <!-- Checkbox Tanque Cheio / Carga Completa -->
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                formControlName="tanqueCheio"
+                class="w-5 h-5 rounded border-slate-300 text-emerald-700 focus:ring-emerald-700"
+              />
+              <span class="text-sm font-medium text-slate-800">
+                {{ metaCombustivelAtual().valor === 'ELETRICO' ? 'Bateria carregada até 100%' : 'Tanque / cilindro foi completado totalmente' }}
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- PASSO 3: Hodômetro e Localização -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
+          <h2 class="text-base font-bold text-slate-900 mb-4">3. Quilometragem e Posto</h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="hodometro" class="form-label">Hodômetro atual no painel (km) *</label>
+              <input
+                id="hodometro"
+                type="number"
+                step="0.1"
+                formControlName="hodometro"
+                class="form-input font-mono tabular-nums"
+                [class.form-input-error]="temErro('hodometro')"
+                [placeholder]="hodometroAnterior() !== null ? 'Maior que ' + hodometroAnterior() + ' km' : 'Ex: 45480'"
+              />
+              @if (hodometroAnterior() !== null) {
+                <p class="form-hint">
+                  Último hodômetro registrado deste veículo:
+                  <strong class="font-mono">{{ hodometroAnterior() | number:'1.0-1' }} km</strong>
+                </p>
+              }
+              @if (temErro('hodometro')) {
+                <p class="form-error" role="alert">
+                  <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                  <span>O hodômetro deve ser maior que {{ hodometroAnterior() | number:'1.0-1' }} km.</span>
+                </p>
+              }
+            </div>
+
+            <div>
+              <label for="locPosto" class="form-label">Nome ou local do Posto / Eletroposto</label>
+              <input
+                id="locPosto"
+                type="text"
+                formControlName="locPosto"
+                class="form-input"
+                placeholder="Ex: Posto Ipiranga Centro, Eletroposto Shopping..."
+              />
+              <p class="form-hint">Permite comparar quais postos têm o melhor preço médio.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Coluna Lateral: Card de Preview em Tempo Real (Heurística de Nielsen) -->
+      <aside class="lg:sticky lg:top-6 bg-slate-900 text-white p-6 rounded-2xl shadow-lg space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Cálculo em Tempo Real</span>
+            <h3 class="text-base font-bold mt-0.5">Prévia de Eficiência</h3>
+          </div>
+          <i class="fa-solid fa-calculator text-emerald-400 text-xl" aria-hidden="true"></i>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Preço Unitário -->
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700/80">
+            <span class="block text-xs text-slate-400">
+              Preço por {{ metaCombustivelAtual().unidadeVolume }}
+            </span>
+            <span class="block text-xl font-bold font-mono tabular-nums text-white mt-0.5">
+              @if (previewCalculos().precoUnitario; as preco) {
+                {{ preco | currency:'BRL':'symbol':'1.3-3' }} / {{ metaCombustivelAtual().unidadeVolume }}
+              } @else {
+                —
+              }
+            </span>
+          </div>
+
+          <!-- Distância Percorrida -->
+          <div class="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700/80">
+            <span class="block text-xs text-slate-400">Distância percorrida (Δ km)</span>
+            <span class="block text-xl font-bold font-mono tabular-nums text-white mt-0.5">
+              @if (previewCalculos().kmPercorridos; as km) {
+                + {{ km | number:'1.1-1' }} km
+              } @else {
+                —
+              }
+            </span>
+          </div>
+
+          <!-- Média de Consumo -->
+          <div class="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-700/60">
+            <span class="block text-xs text-emerald-300">Média deste registro</span>
+            <span class="block text-2xl font-bold font-mono tabular-nums text-emerald-400 mt-0.5">
+              @if (previewCalculos().mediaConsumo; as media) {
+                {{ media | number:'1.2-2' }} {{ metaCombustivelAtual().unidadeConsumo }}
+              } @else {
+                —
+              }
+            </span>
+            @if (previewCalculos().custoPorKm; as custoKm) {
+              <span class="block text-xs font-mono text-emerald-200 mt-1">
+                Custo rodado: {{ custoKm | currency:'BRL':'symbol':'1.3-3' }} por km
+              </span>
+            }
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full btn-primary bg-emerald-600 hover:bg-emerald-500 text-white py-3"
+          [disabled]="salvando()"
+        >
+          @if (salvando()) {
+            <i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i>
+            <span>Registrando...</span>
+          } @else {
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+            <span>Confirmar e salvar registro</span>
+          }
+        </button>
+      </aside>
+    </form>
+  }
+</div>
