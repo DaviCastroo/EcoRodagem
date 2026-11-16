@@ -94,94 +94,367 @@
     </article>
   </section>
 
-  <!-- Gráficos e Comparativos -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <!-- Card 1: Evolução de Gastos por Mês -->
-    <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Gastos Mensais</h2>
-          <p class="text-xs text-slate-600">Histórico consolidado por período (Ano-Mês)</p>
-        </div>
-        <i class="fa-solid fa-chart-column text-slate-400" aria-hidden="true"></i>
-      </div>
-
-      @if (resumo.gastosPorMes.length === 0) {
-        <div class="py-12 text-center">
-          <p class="text-sm text-slate-600">Nenhum gasto registrado ainda.</p>
-          <a routerLink="/abastecimentos/novo" class="inline-block mt-3 text-xs font-semibold text-emerald-700 hover:underline">
-            Registrar primeiro abastecimento →
-          </a>
-        </div>
-      } @else {
-        <div class="space-y-4">
-          @for (item of resumo.gastosPorMes; track item.anoMes) {
-            <div>
-              <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1.5">
-                <span class="font-mono">{{ item.anoMes }}</span>
-                <span class="font-mono tabular-nums text-slate-900">
-                  {{ item.valorTotal | currency:'BRL':'symbol':'1.2-2' }}
+  <!-- Painéis Simétricos: Gastos Mensais & Eficiência por Veículo -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 items-stretch">
+    <!-- Card 1: Evolução Financeira e Gastos Mensais (6 colunas, altura total balanceada) -->
+    <section class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
+      <div>
+        <!-- Cabeçalho do Card -->
+        <div class="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-slate-900">Evolução de Gastos Mensais</h2>
+              @if (variacaoUltimoMes(); as varMes) {
+                <span
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold"
+                  [class.bg-emerald-50]="varMes <= 0"
+                  [class.text-emerald-700]="varMes <= 0"
+                  [class.bg-amber-50]="varMes > 0"
+                  [class.text-amber-800]="varMes > 0"
+                >
+                  <i
+                    class="fa-solid"
+                    [class.fa-arrow-trend-down]="varMes <= 0"
+                    [class.fa-arrow-trend-up]="varMes > 0"
+                    aria-hidden="true"
+                  ></i>
+                  {{ varMes > 0 ? '+' : '' }}{{ varMes | number:'1.1-1' }}% vs mês ant.
                 </span>
-              </div>
-              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-emerald-600 rounded-full transition-all duration-500"
-                  [style.width.%]="calcularPercentualBarra(item.valorTotal)"
-                ></div>
-              </div>
+              }
             </div>
-          }
+            <p class="text-xs text-slate-600 mt-0.5">
+              Curva de desembolso mensal, média por período e variação percentual
+            </p>
+          </div>
+          <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-chart-column text-sm" aria-hidden="true"></i>
+          </div>
         </div>
-      }
-    </section>
 
-    <!-- Card 2: Eficiência por Veículo (Suporte a L, m³ e kWh) -->
-    <section class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Eficiência por Veículo</h2>
-          <p class="text-xs text-slate-600">Comparativo de consumo médio e custo por quilômetro</p>
-        </div>
-        <a routerLink="/veiculos" class="text-xs font-semibold text-emerald-700 hover:underline">
-          Gerenciar frota
-        </a>
-      </div>
+        @if (gastosMensaisEnriquecidos().length === 0) {
+          <div class="py-16 text-center">
+            <p class="text-sm text-slate-600">Nenhum gasto registrado ainda.</p>
+            <a routerLink="/abastecimentos/novo" class="inline-block mt-3 text-xs font-semibold text-emerald-700 hover:underline">
+              Registrar primeiro abastecimento →
+            </a>
+          </div>
+        } @else {
+          <!-- Mini-KPIs do Bloco de Gastos -->
+          <div class="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 mb-6">
+            <div>
+              <span class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total no Período</span>
+              <span class="block text-sm sm:text-base font-bold font-mono tabular-nums text-slate-900 mt-0.5">
+                {{ totalAcumuladoPeriodo() | currency:'BRL':'symbol':'1.2-2' }}
+              </span>
+            </div>
+            <div class="border-l border-slate-200/80 pl-3">
+              <span class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Média / Mês</span>
+              <span class="block text-sm sm:text-base font-bold font-mono tabular-nums text-emerald-700 mt-0.5">
+                {{ mediaGastoMensal() | currency:'BRL':'symbol':'1.2-2' }}
+              </span>
+            </div>
+            <div class="border-l border-slate-200/80 pl-3">
+              <span class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Pico Mensal</span>
+              <span class="block text-sm sm:text-base font-bold font-mono tabular-nums text-slate-900 mt-0.5">
+                {{ maiorGastoMensal() | currency:'BRL':'symbol':'1.2-2' }}
+              </span>
+            </div>
+          </div>
 
-      @if (resumo.consumoPorVeiculo.length === 0) {
-        <div class="py-12 text-center">
-          <p class="text-sm text-slate-600">Nenhum veículo cadastrado na sua frota.</p>
-          <a routerLink="/veiculos/novo" class="inline-block mt-3 text-xs font-semibold text-emerald-700 hover:underline">
-            Cadastrar primeiro veículo →
-          </a>
-        </div>
-      } @else {
-        <div class="divide-y divide-slate-100">
-          @for (v of resumo.consumoPorVeiculo; track v.veiculoId) {
-            <div class="py-3.5 flex items-center justify-between gap-4">
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-bold text-slate-900 truncate">{{ v.apelido }}</span>
-                  <span class="px-2 py-0.5 text-[11px] font-mono font-semibold bg-slate-100 text-slate-700 rounded">
-                    {{ v.placa }}
+          <!-- Gráfico de Colunas Verticais Interativo -->
+          <div class="relative pt-6 pb-3 px-4 rounded-2xl bg-slate-50/70 border border-slate-100 mb-6">
+            <div class="h-44 flex items-end justify-around gap-3 sm:gap-5 border-b border-slate-200 pb-2">
+              @for (item of gastosMensaisEnriquecidos(); track item.anoMes) {
+                <div class="flex-1 flex flex-col items-center h-full justify-end group max-w-[96px]">
+                  <!-- Valor no topo da coluna -->
+                  <span
+                    class="text-[11px] font-mono font-bold tabular-nums mb-1.5 transition-colors"
+                    [class.text-emerald-800]="item.isUltimo"
+                    [class.text-slate-700]="!item.isUltimo"
+                  >
+                    {{ item.valorTotal | currency:'BRL':'symbol':'1.0-0' }}
+                  </span>
+
+                  <!-- Trilho e Coluna Vertical -->
+                  <div class="w-full max-w-[48px] bg-slate-200/60 rounded-t-xl h-32 flex items-end overflow-hidden p-0.5">
+                    <div
+                      class="w-full rounded-t-lg transition-all duration-500 relative"
+                      [class.bg-emerald-600]="item.isUltimo"
+                      [class.bg-amber-500]="item.isPico && !item.isUltimo"
+                      [class.bg-emerald-500]="!item.isPico && !item.isUltimo"
+                      [style.height.%]="item.percentualAltura"
+                      [attr.title]="item.rotuloLongo + ': ' + (item.valorTotal | currency:'BRL')"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Rótulos do Eixo X -->
+            <div class="flex items-center justify-around gap-3 sm:gap-5 pt-2.5">
+              @for (item of gastosMensaisEnriquecidos(); track item.anoMes) {
+                <div class="flex-1 text-center max-w-[96px]">
+                  <span
+                    class="block text-xs font-bold"
+                    [class.text-emerald-800]="item.isUltimo"
+                    [class.text-slate-700]="!item.isUltimo"
+                  >
+                    {{ item.rotuloCurto }}
+                  </span>
+                  <span class="block text-[10px] text-slate-500 font-mono">
+                    {{ item.percentualParticipacao }}% do total
                   </span>
                 </div>
-                <div class="mt-1">
-                  <app-propulsion-badge [propulsao]="v.propulsao" />
+              }
+            </div>
+          </div>
+
+          <!-- Detalhamento Mensal Comparativo -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+              Detalhamento por Mês
+            </h3>
+            <div class="divide-y divide-slate-100 rounded-xl border border-slate-200/80 overflow-hidden">
+              @for (mes of gastosMensaisReverso(); track mes.anoMes) {
+                <div class="px-4 py-3 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div
+                      class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                      [class.bg-emerald-100]="mes.isUltimo"
+                      [class.text-emerald-800]="mes.isUltimo"
+                      [class.bg-slate-100]="!mes.isUltimo"
+                      [class.text-slate-700]="!mes.isUltimo"
+                    >
+                      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-900 truncate">{{ mes.rotuloLongo }}</span>
+                        @if (mes.isPico) {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            Maior gasto
+                          </span>
+                        }
+                      </div>
+                      <span class="text-xs text-slate-500">
+                        Representa {{ mes.percentualParticipacao }}% do desembolso acumulado
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="text-right shrink-0">
+                    <span class="block text-sm font-bold font-mono tabular-nums text-slate-900">
+                      {{ mes.valorTotal | currency:'BRL':'symbol':'1.2-2' }}
+                    </span>
+                    @if (mes.variacaoPercentual !== null) {
+                      <span
+                        class="inline-flex items-center gap-1 text-[11px] font-mono font-semibold"
+                        [class.text-emerald-700]="mes.variacaoPercentual <= 0"
+                        [class.text-amber-700]="mes.variacaoPercentual > 0"
+                      >
+                        {{ mes.variacaoPercentual > 0 ? '+' : '' }}{{ mes.variacaoPercentual | number:'1.1-1' }}% vs mês ant.
+                      </span>
+                    } @else {
+                      <span class="block text-[11px] text-slate-400">Mês base</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Rodapé do Card de Gastos -->
+      <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span><i class="fa-solid fa-circle-info mr-1 text-emerald-600" aria-hidden="true"></i>Valores somam combustíveis (L/m³) e recargas (kWh)</span>
+        <a routerLink="/abastecimentos" class="font-semibold text-emerald-700 hover:underline">
+          Ver lançamentos →
+        </a>
+      </div>
+    </section>
+
+    <!-- Card 2: Eficiência por Veículo (6 colunas, altura balanceada + Filtros e Barra de Eficiência) -->
+    <section class="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
+      <div>
+        <!-- Cabeçalho + Link -->
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Eficiência por Veículo</h2>
+            <p class="text-xs text-slate-600 mt-0.5">
+              Ranking comparativo de custo por quilômetro (R$/km) e rendimento energético
+            </p>
+          </div>
+          <a routerLink="/veiculos" class="text-xs font-semibold text-emerald-700 hover:underline shrink-0">
+            Gerenciar frota →
+          </a>
+        </div>
+
+        <!-- Barra de Filtros de Categoria + Critério de Ordenação (Largura fixa no botão para nunca quebrar linha) -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-4 mb-4 border-b border-slate-100">
+          <div class="inline-flex items-center gap-1 p-1 rounded-xl bg-slate-100 text-xs shrink-0">
+            <button
+              type="button"
+              (click)="filtroCategoriaEficiencia.set('TODOS')"
+              class="px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+              [class.bg-white]="filtroCategoriaEficiencia() === 'TODOS'"
+              [class.text-slate-900]="filtroCategoriaEficiencia() === 'TODOS'"
+              [class.shadow-2xs]="filtroCategoriaEficiencia() === 'TODOS'"
+              [class.text-slate-600]="filtroCategoriaEficiencia() !== 'TODOS'"
+            >
+              Todos ({{ resumo.consumoPorVeiculo.length }})
+            </button>
+            <button
+              type="button"
+              (click)="filtroCategoriaEficiencia.set('CARRO')"
+              class="px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+              [class.bg-white]="filtroCategoriaEficiencia() === 'CARRO'"
+              [class.text-slate-900]="filtroCategoriaEficiencia() === 'CARRO'"
+              [class.shadow-2xs]="filtroCategoriaEficiencia() === 'CARRO'"
+              [class.text-slate-600]="filtroCategoriaEficiencia() !== 'CARRO'"
+            >
+              Carros
+            </button>
+            <button
+              type="button"
+              (click)="filtroCategoriaEficiencia.set('MOTO')"
+              class="px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+              [class.bg-white]="filtroCategoriaEficiencia() === 'MOTO'"
+              [class.text-slate-900]="filtroCategoriaEficiencia() === 'MOTO'"
+              [class.shadow-2xs]="filtroCategoriaEficiencia() === 'MOTO'"
+              [class.text-slate-600]="filtroCategoriaEficiencia() !== 'MOTO'"
+            >
+              Motos
+            </button>
+            <button
+              type="button"
+              (click)="filtroCategoriaEficiencia.set('PESADOS')"
+              class="px-2.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+              [class.bg-white]="filtroCategoriaEficiencia() === 'PESADOS'"
+              [class.text-slate-900]="filtroCategoriaEficiencia() === 'PESADOS'"
+              [class.shadow-2xs]="filtroCategoriaEficiencia() === 'PESADOS'"
+              [class.text-slate-600]="filtroCategoriaEficiencia() !== 'PESADOS'"
+            >
+              Pesados
+            </button>
+          </div>
+
+          <button
+            type="button"
+            (click)="ordenacaoEficiencia.set(ordenacaoEficiencia() === 'CUSTO_KM' ? 'RENDIMENTO' : 'CUSTO_KM')"
+            class="inline-flex items-center justify-center gap-1.5 w-40 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs text-slate-800 font-semibold transition-colors shrink-0 whitespace-nowrap"
+            title="Alternar critério de ordenação"
+          >
+            <i class="fa-solid fa-arrow-up-wide-short text-emerald-700 shrink-0" aria-hidden="true"></i>
+            <span>{{ ordenacaoEficiencia() === 'CUSTO_KM' ? 'Menor R$/km' : 'Maior Média' }}</span>
+          </button>
+        </div>
+
+        @if (veiculosEficienciaVisiveis().length === 0) {
+          <div class="py-12 text-center">
+            <p class="text-sm text-slate-600">Nenhum veículo encontrado nesta categoria.</p>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            @for (v of veiculosEficienciaVisiveis(); track v.veiculoId; let idx = $index) {
+              <div
+                class="p-3.5 rounded-2xl border transition-all"
+                [class.bg-emerald-50]="idx === 0"
+                [class.border-emerald-200]="idx === 0"
+                [class.bg-slate-50]="idx !== 0"
+                [class.border-slate-200]="idx !== 0"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <!-- Ícone da Categoria + Identificação -->
+                  <div class="flex items-start gap-3 min-w-0">
+                    <div
+                      class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                      [class.bg-emerald-700]="idx === 0"
+                      [class.text-white]="idx === 0"
+                      [class.bg-white]="idx !== 0"
+                      [class.text-slate-700]="idx !== 0"
+                      [class.border]="idx !== 0"
+                      [class.border-slate-200]="idx !== 0"
+                      [attr.title]="obterRotuloCategoria(v.categoria)"
+                    >
+                      <i [class]="obterIconeCategoria(v.categoria) + ' text-sm'" aria-hidden="true"></i>
+                    </div>
+
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-bold text-slate-900 truncate">{{ v.apelido }}</span>
+                        <span class="px-2 py-0.5 text-[11px] font-mono font-semibold bg-white text-slate-700 border border-slate-200 rounded">
+                          {{ v.placa }}
+                        </span>
+                        @if (idx === 0) {
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-700 text-white">
+                            <i class="fa-solid fa-trophy mr-1" aria-hidden="true"></i>1º Eficiência
+                          </span>
+                        }
+                      </div>
+                      <div class="mt-1.5 flex items-center gap-2">
+                        <app-propulsion-badge [propulsao]="v.propulsao" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Métricas de Consumo e R$/km -->
+                  <div class="text-right shrink-0">
+                    <div class="inline-flex items-baseline gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200/90">
+                      <span class="text-sm font-bold text-slate-900 font-mono tabular-nums">
+                        {{ v.custoMedioPorKm | currency:'BRL':'symbol':'1.3-3' }}
+                      </span>
+                      <span class="text-[11px] text-slate-500 font-mono">/km</span>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-700 font-mono tabular-nums mt-1">
+                      {{ v.mediaConsumo | number:'1.2-2' }} {{ v.unidadeConsumo }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Barra de Eficiência Relativa -->
+                <div class="mt-3 flex items-center gap-2.5">
+                  <div class="flex-1 h-2 bg-white rounded-full overflow-hidden border border-slate-200/60">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      [class.bg-emerald-600]="idx === 0"
+                      [class.bg-slate-600]="idx !== 0"
+                      [style.width.%]="calcularBarraEficienciaVeiculo(v)"
+                    ></div>
+                  </div>
+                  <span class="text-[11px] font-mono text-slate-500 shrink-0">
+                    {{ calcularBarraEficienciaVeiculo(v) }}% efic.
+                  </span>
                 </div>
               </div>
+            }
+          </div>
+        }
+      </div>
 
-              <div class="text-right shrink-0">
-                <p class="text-sm font-bold text-slate-900 font-mono tabular-nums">
-                  {{ v.mediaConsumo | number:'1.2-2' }} {{ v.unidadeConsumo }}
-                </p>
-                <p class="text-xs text-slate-600 font-mono tabular-nums mt-0.5">
-                  {{ v.custoMedioPorKm | currency:'BRL':'symbol':'1.3-3' }}/km
-                </p>
-              </div>
-            </div>
-          }
-        </div>
-      }
+      <!-- Rodapé / Botão de Expandir ou Recolher Lista para manter os dois cards simétricos -->
+      <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-500">
+          Exibindo {{ veiculosEficienciaVisiveis().length }} de {{ veiculosEficienciaFiltrados().length }} veículos
+        </span>
+        @if (veiculosEficienciaFiltrados().length > 5) {
+          <button
+            type="button"
+            (click)="mostrarTodosVeiculos.set(!mostrarTodosVeiculos())"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+          >
+            <span>
+              {{ mostrarTodosVeiculos() ? 'Mostrar apenas Top 5' : 'Expandir todos (' + veiculosEficienciaFiltrados().length + ')' }}
+            </span>
+            <i
+              class="fa-solid"
+              [class.fa-chevron-up]="mostrarTodosVeiculos()"
+              [class.fa-chevron-down]="!mostrarTodosVeiculos()"
+              aria-hidden="true"
+            ></i>
+          </button>
+        }
+      </div>
     </section>
   </div>
 

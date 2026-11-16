@@ -44,6 +44,13 @@ export const CATEGORIAS_VEICULO: readonly CategoriaMeta[] = [
   { valor: 'CAMINHAO', rotulo: 'Caminhão / Pesado', icone: 'fa-solid fa-truck' }
 ] as const;
 
+export const CATEGORIAS_MAP: Record<CategoriaVeiculo, CategoriaMeta> = {
+  CARRO: CATEGORIAS_VEICULO[0],
+  MOTO: CATEGORIAS_VEICULO[1],
+  UTILITARIO: CATEGORIAS_VEICULO[2],
+  CAMINHAO: CATEGORIAS_VEICULO[3]
+};
+
 export const PROPULSOES_MAP: Record<TipoPropulsao, PropulsaoMeta> = {
   FLEX: {
     valor: 'FLEX',
