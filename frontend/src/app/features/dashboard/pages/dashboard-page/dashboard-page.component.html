@@ -94,6 +94,279 @@
     </article>
   </section>
 
+  <!-- Assistente de Eficiência (Visual Limpo, Divulgação Progressiva — Leis de Hick & Miller) -->
+  <section
+    class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs mb-8"
+    aria-label="Assistente de Eficiência da Frota"
+  >
+    <!-- Cabeçalho Minimalista -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-100">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-wand-magic-sparkles text-sm" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base font-bold text-slate-900">Assistente de Eficiência</h2>
+            @if (diagnosticoIa(); as diag) {
+              <span
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+                [class.bg-emerald-50]="geminiAtivo()"
+                [class.text-emerald-800]="geminiAtivo()"
+                [class.border-emerald-200]="geminiAtivo()"
+                [class.bg-slate-50]="!geminiAtivo()"
+                [class.text-slate-600]="!geminiAtivo()"
+                [class.border-slate-200]="!geminiAtivo()"
+                [attr.title]="diag.fonteIa"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  [class.bg-emerald-600]="geminiAtivo()"
+                  [class.bg-slate-400]="!geminiAtivo()"
+                ></span>
+                {{ geminiAtivo() ? 'Gemini ativo' : 'Modo local' }}
+              </span>
+            }
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Insights inteligentes de economia e respostas rápidas sobre sua frota.
+          </p>
+        </div>
+      </div>
+
+      <!-- Abas Limpas + Atualização Discreta -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="inline-flex items-center gap-1 p-1 rounded-xl bg-slate-100 text-xs">
+          <button
+            type="button"
+            (click)="abaIaAtiva.set('DIAGNOSTICO')"
+            class="px-3.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+            [class.bg-white]="abaIaAtiva() === 'DIAGNOSTICO'"
+            [class.text-slate-900]="abaIaAtiva() === 'DIAGNOSTICO'"
+            [class.shadow-2xs]="abaIaAtiva() === 'DIAGNOSTICO'"
+            [class.text-slate-600]="abaIaAtiva() !== 'DIAGNOSTICO'"
+          >
+            Resumo
+          </button>
+          <button
+            type="button"
+            (click)="abaIaAtiva.set('CHAT')"
+            class="px-3.5 py-1.5 rounded-lg font-semibold transition-all whitespace-nowrap"
+            [class.bg-white]="abaIaAtiva() === 'CHAT'"
+            [class.text-slate-900]="abaIaAtiva() === 'CHAT'"
+            [class.shadow-2xs]="abaIaAtiva() === 'CHAT'"
+            [class.text-slate-600]="abaIaAtiva() !== 'CHAT'"
+          >
+            Perguntar
+            @if (historicoChatIa().length > 0) {
+              <span class="ml-1 text-[11px] text-emerald-700 font-mono">({{ historicoChatIa().length }})</span>
+            }
+          </button>
+        </div>
+
+        <button
+          type="button"
+          (click)="gerarDiagnosticoIa()"
+          [disabled]="carregandoDiagnosticoIa()"
+          class="w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-emerald-700 flex items-center justify-center transition-colors disabled:opacity-50"
+          aria-label="Atualizar análise"
+          title="Atualizar análise"
+        >
+          <i
+            class="fa-solid fa-arrows-rotate text-xs"
+            [class.animate-spin]="carregandoDiagnosticoIa()"
+            aria-hidden="true"
+          ></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ABA 1: Resumo Inteligente -->
+    @if (abaIaAtiva() === 'DIAGNOSTICO') {
+      @if (carregandoDiagnosticoIa()) {
+        <div class="pt-5 space-y-4 animate-pulse" aria-busy="true">
+          <div class="h-20 bg-slate-100 rounded-2xl"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="h-20 bg-slate-100 rounded-2xl"></div>
+            <div class="h-20 bg-slate-100 rounded-2xl"></div>
+          </div>
+        </div>
+      }
+      @if (!carregandoDiagnosticoIa() && diagnosticoIa(); as diag) {
+        <div class="pt-5 space-y-5">
+          <!-- Bloco Principal: Síntese + Economia Estimada -->
+          <div class="p-5 rounded-2xl bg-slate-50/90 border border-slate-200/70 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <p class="text-sm text-slate-700 leading-relaxed flex-1">
+              {{ diag.resumoExecutivo }}
+            </p>
+            <div class="md:border-l md:border-slate-200 md:pl-6 shrink-0 flex md:flex-col items-baseline md:items-end justify-between gap-1">
+              <span class="text-xs font-medium text-slate-500">Economia estimada / mês</span>
+              <span class="text-2xl font-bold font-mono tabular-nums text-emerald-700">
+                {{ diag.economiaEstimadaMensal | currency:'BRL':'symbol':'1.2-2' }}
+              </span>
+              <span class="text-xs font-medium text-emerald-700">
+                ~{{ diag.percentualOtimizacaoPotencial | number:'1.1-1' }}% de potencial
+              </span>
+            </div>
+          </div>
+
+          <!-- Faixa Compacta: Mais Econômico vs Maior Custo -->
+          @if (diag.veiculoMaisEficiente || diag.pontoAtencao) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              @if (diag.veiculoMaisEficiente; as best) {
+                <div class="px-4 py-3 rounded-xl bg-emerald-50/60 border border-emerald-200/60 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <i class="fa-solid fa-circle-check text-emerald-600 shrink-0" aria-hidden="true"></i>
+                    <div class="min-w-0">
+                      <span class="block text-[11px] font-semibold text-emerald-800">Mais econômico</span>
+                      <span class="block text-sm font-bold text-slate-900 truncate">
+                        {{ best.apelido }} <span class="font-mono font-normal text-xs text-slate-500">• {{ best.placa }}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <span class="font-mono text-sm font-bold text-emerald-800 shrink-0">
+                    {{ best.custoPorKm | currency:'BRL':'symbol':'1.3-3' }}/km
+                  </span>
+                </div>
+              }
+              @if (diag.pontoAtencao; as worst) {
+                <div class="px-4 py-3 rounded-xl bg-amber-50/60 border border-amber-200/60 flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 shrink-0" aria-hidden="true"></i>
+                    <div class="min-w-0">
+                      <span class="block text-[11px] font-semibold text-amber-900">Maior custo</span>
+                      <span class="block text-sm font-bold text-slate-900 truncate">
+                        {{ worst.apelido }} <span class="font-mono font-normal text-xs text-slate-500">• {{ worst.placa }}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <span class="font-mono text-sm font-bold text-amber-900 shrink-0">
+                    {{ worst.custoPorKm | currency:'BRL':'symbol':'1.3-3' }}/km
+                  </span>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Recomendações com Divulgação Progressiva (Top 2 visíveis, expansível para todas) -->
+          @if (diag.recomendacoes.length > 0) {
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Principais Recomendações
+                </h3>
+                @if (diag.recomendacoes.length > 2) {
+                  <button
+                    type="button"
+                    (click)="mostrarTodasRecomendacoes.set(!mostrarTodasRecomendacoes())"
+                    class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+                  >
+                    {{ mostrarTodasRecomendacoes() ? 'Mostrar menos' : 'Ver todas (' + diag.recomendacoes.length + ')' }}
+                  </button>
+                }
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                @for (rec of recomendacoesVisiveis(); track rec.titulo) {
+                  <article class="p-4 rounded-xl border border-slate-200/80 bg-white">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span
+                        class="w-2 h-2 rounded-full shrink-0"
+                        [class.bg-emerald-600]="rec.impacto === 'ALTO'"
+                        [class.bg-sky-500]="rec.impacto !== 'ALTO'"
+                        [attr.title]="'Impacto ' + rec.impacto"
+                      ></span>
+                      <h4 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.titulo }}</h4>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed pl-4">{{ rec.descricao }}</p>
+                  </article>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- ABA 2: Perguntar em Linguagem Natural -->
+    @if (abaIaAtiva() === 'CHAT') {
+      <div class="pt-5 space-y-4">
+        <!-- Input + Botão Primário -->
+        <div class="flex flex-col sm:flex-row gap-2.5" role="search" aria-label="Consultar Assistente">
+          <label for="campoPerguntaIa" class="sr-only">Digite sua pergunta sobre a frota</label>
+          <input
+            id="campoPerguntaIa"
+            type="text"
+            [value]="perguntaIa()"
+            (input)="perguntaIa.set($any($event.target).value)"
+            (keydown.enter)="enviarPerguntaIa()"
+            maxlength="600"
+            placeholder="Pergunte algo sobre sua frota, gastos, postos ou consumo..."
+            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
+            [disabled]="carregandoChatIa()"
+          />
+          <button
+            type="button"
+            (click)="enviarPerguntaIa()"
+            [disabled]="carregandoChatIa() || perguntaIa().trim().length < 3"
+            class="btn-primary shrink-0 disabled:opacity-50"
+          >
+            @if (carregandoChatIa()) {
+              <i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i>
+              <span>Pensando...</span>
+            } @else {
+              <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+              <span>Perguntar</span>
+            }
+          </button>
+        </div>
+
+        <!-- Sugestões Rápidas -->
+        <div class="flex flex-wrap items-center gap-2">
+          @for (sugestao of perguntasRapidasIa; track sugestao) {
+            <button
+              type="button"
+              (click)="enviarPerguntaIa(sugestao)"
+              [disabled]="carregandoChatIa()"
+              class="px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 text-slate-600 transition-colors disabled:opacity-50"
+            >
+              {{ sugestao }}
+            </button>
+          }
+        </div>
+
+        <!-- Histórico de Respostas -->
+        @if (historicoChatIa().length > 0) {
+          <div class="space-y-3 pt-2" aria-live="polite">
+            @for (item of historicoChatIa(); track item.pergunta + '-' + $index) {
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-xs font-bold text-slate-900">{{ item.pergunta }}</span>
+                  <span
+                    class="inline-flex items-center gap-1 text-[11px] font-medium shrink-0"
+                    [class.text-emerald-700]="isRespostaGemini(item.fonteIa)"
+                    [class.text-slate-400]="!isRespostaGemini(item.fonteIa)"
+                    [attr.title]="item.fonteIa"
+                  >
+                    <i
+                      class="fa-solid text-[10px]"
+                      [class.fa-wand-magic-sparkles]="isRespostaGemini(item.fonteIa)"
+                      [class.fa-bolt]="!isRespostaGemini(item.fonteIa)"
+                      aria-hidden="true"
+                    ></i>
+                    {{ isRespostaGemini(item.fonteIa) ? 'Gemini' : 'Local' }}
+                  </span>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed pl-3.5 border-l-2 border-emerald-600">
+                  {{ item.resposta }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+
   <!-- Painéis Simétricos: Gastos Mensais & Eficiência por Veículo -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8 items-stretch">
     <!-- Card 1: Evolução Financeira e Gastos Mensais (6 colunas, altura total balanceada) -->

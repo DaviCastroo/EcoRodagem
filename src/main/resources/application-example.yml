@@ -40,3 +40,8 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method
+
+# Integração com o Microsserviço de IA em Python (FastAPI + LLM)
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}

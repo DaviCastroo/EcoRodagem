@@ -11,6 +11,14 @@ frontend/dist/
 frontend/.angular/
 frontend/out-tsc/
 
+# Python / AI Microservice
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+ai-service/.env
+
 # Logs & Runtime
 *.log
 *.class

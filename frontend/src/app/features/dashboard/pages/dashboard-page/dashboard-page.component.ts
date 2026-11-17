@@ -11,7 +11,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { ConsumoVeiculo, DashboardResponse } from '../../../../core/models/dashboard.model';
+import {
+  AiChatResponse,
+  AiDiagnosticsResponse,
+  ConsumoVeiculo,
+  DashboardResponse
+} from '../../../../core/models/dashboard.model';
 import { CATEGORIAS_MAP, CategoriaVeiculo } from '../../../../core/models/enums.model';
 import { PropulsionBadgeComponent } from '../../../../shared/components/propulsion-badge/propulsion-badge.component';
 import { DashboardApiService } from '../../services/dashboard-api.service';
@@ -78,6 +83,33 @@ export class DashboardPageComponent implements OnInit {
   readonly filtroCategoriaEficiencia = signal<FiltroGrupoCategoria>('TODOS');
   readonly ordenacaoEficiencia = signal<CriterioOrdenacaoEficiencia>('CUSTO_KM');
   readonly mostrarTodosVeiculos = signal<boolean>(false);
+
+  // Estados do Assistente de Eficiência (IA)
+  readonly abaIaAtiva = signal<'DIAGNOSTICO' | 'CHAT'>('DIAGNOSTICO');
+  readonly mostrarTodasRecomendacoes = signal<boolean>(false);
+  readonly carregandoDiagnosticoIa = signal<boolean>(false);
+  readonly diagnosticoIa = signal<AiDiagnosticsResponse | null>(null);
+  readonly perguntaIa = signal<string>('');
+  readonly carregandoChatIa = signal<boolean>(false);
+  readonly historicoChatIa = signal<readonly AiChatResponse[]>([]);
+  readonly perguntasRapidasIa: readonly string[] = [
+    'Qual veículo tem o menor custo por km?',
+    'Compensa mais elétrico, GNV ou Flex na frota?',
+    'Onde está mais barato abastecer ou recarregar?'
+  ];
+
+  readonly geminiAtivo = computed<boolean>(() => {
+    const fonte = this.diagnosticoIa()?.fonteIa ?? '';
+    return fonte.toLowerCase().includes('gemini');
+  });
+
+  readonly recomendacoesVisiveis = computed(() => {
+    const lista = this.diagnosticoIa()?.recomendacoes ?? [];
+    if (this.mostrarTodasRecomendacoes() || lista.length <= 2) {
+      return lista;
+    }
+    return lista.slice(0, 2);
+  });
 
   readonly totalAcumuladoPeriodo = computed<number>(() => {
     const gastos = this.dados()?.gastosPorMes ?? [];
@@ -189,6 +221,7 @@ export class DashboardPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarDashboard();
+    this.gerarDiagnosticoIa();
   }
 
   carregarDashboard(): void {
@@ -202,6 +235,48 @@ export class DashboardPageComponent implements OnInit {
       .subscribe({
         next: (res) => this.dados.set(res)
       });
+  }
+
+  gerarDiagnosticoIa(): void {
+    this.carregandoDiagnosticoIa.set(true);
+    this.dashboardApi
+      .obterDiagnosticoIa()
+      .pipe(
+        finalize(() => this.carregandoDiagnosticoIa.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (res) => this.diagnosticoIa.set(res)
+      });
+  }
+
+  enviarPerguntaIa(perguntaCustomizada?: string): void {
+    const texto = (perguntaCustomizada ?? this.perguntaIa()).trim();
+    if (texto.length < 3 || this.carregandoChatIa()) {
+      return;
+    }
+
+    this.abaIaAtiva.set('CHAT');
+    if (!perguntaCustomizada) {
+      this.perguntaIa.set('');
+    }
+    this.carregandoChatIa.set(true);
+
+    this.dashboardApi
+      .perguntarCopilotoIa(texto)
+      .pipe(
+        finalize(() => this.carregandoChatIa.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (res) => {
+          this.historicoChatIa.update((atual) => [res, ...atual]);
+        }
+      });
+  }
+
+  isRespostaGemini(fonte: string): boolean {
+    return fonte.toLowerCase().includes('gemini');
   }
 
   obterIconeCategoria(categoria: CategoriaVeiculo): string {
